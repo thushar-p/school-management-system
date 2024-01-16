@@ -1,5 +1,7 @@
 package com.school.sba.service;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 
 import com.school.sba.requestdto.UserRequest;
@@ -13,5 +15,9 @@ public interface UserService {
 	ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId);
 
 	ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId);
+
+	ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest);
+
+	ResponseEntity<ResponseStructure<List<UserResponse>>> getTeacher();
 
 }

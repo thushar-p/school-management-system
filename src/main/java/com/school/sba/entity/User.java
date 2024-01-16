@@ -39,4 +39,6 @@ public class User {
 	private boolean isDeleted;
 	
 	private UserRole userRole;
+	
+	
 }
