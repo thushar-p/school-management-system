@@ -12,4 +12,6 @@ public interface UserService {
 
 	ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId);
 
+	ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId);
+
 }

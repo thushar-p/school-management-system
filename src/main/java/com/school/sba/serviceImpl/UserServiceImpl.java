@@ -73,14 +73,32 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId) {
 
-		 User user = userRespository.findById(userId)
+		User user = userRespository.findById(userId)
 				.orElseThrow(() -> new UserNotFoundIdException("user not found"));
-		 
-		 structure.setStatus(HttpStatus.FOUND.value());
-		 structure.setMessage("user found successfully");
-		 structure.setData(mapToUserResponse(user));
-		 
-		 return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
+
+		structure.setStatus(HttpStatus.FOUND.value());
+		structure.setMessage("user found successfully");
+		structure.setData(mapToUserResponse(user));
+
+		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
 	}
+
+	
+	
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId) {
+		User user = userRespository.findById(userId)
+				.orElseThrow(() -> new UserNotFoundIdException("user not found"));
+		
+		user.setDeleted(true);
+		user = userRespository.save(user);
+		
+		structure.setStatus(HttpStatus.OK.value());
+		structure.setMessage("user deleted successfully");
+		structure.setData(mapToUserResponse(user));
+
+		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
+	}
+	
 
 }

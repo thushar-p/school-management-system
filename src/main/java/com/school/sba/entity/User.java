@@ -36,5 +36,7 @@ public class User {
 //	@Column(unique = true)
 	private String userEmail;
 	
+	private boolean isDeleted;
+	
 	private UserRole userRole;
 }
