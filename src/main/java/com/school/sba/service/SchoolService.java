@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 import com.school.sba.entity.School;
-import com.school.sba.request.SchoolRequest;
+import com.school.sba.requestdto.SchoolRequest;
 import com.school.sba.util.ResponseStructure;
 
-public interface ISchoolService {
+public interface SchoolService {
 
 	ResponseEntity<ResponseStructure<School>> saveSchool(SchoolRequest schoolRequest);
 	

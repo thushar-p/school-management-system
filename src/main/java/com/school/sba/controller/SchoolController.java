@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.sba.entity.School;
-import com.school.sba.request.SchoolRequest;
-import com.school.sba.service.ISchoolService;
+import com.school.sba.requestdto.SchoolRequest;
+import com.school.sba.service.SchoolService;
 import com.school.sba.util.ResponseStructure;
 
 @RestController
@@ -23,7 +23,7 @@ import com.school.sba.util.ResponseStructure;
 public class SchoolController {
 	
 	@Autowired
-	private ISchoolService schoolService;
+	private SchoolService schoolService;
 		
 	@PostMapping
 	public ResponseEntity<ResponseStructure<School>> saveSchool(@RequestBody SchoolRequest schoolRequest){

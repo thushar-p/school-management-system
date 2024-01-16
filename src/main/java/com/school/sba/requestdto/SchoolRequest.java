@@ -1,4 +1,4 @@
-package com.school.sba.request;
+package com.school.sba.requestdto;
 
 import lombok.Getter;
 import lombok.Setter;

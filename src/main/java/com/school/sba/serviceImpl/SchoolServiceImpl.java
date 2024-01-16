@@ -1,4 +1,4 @@
-package com.school.sba.serviceImpl;
+package com.school.sba.serviceimpl;
 
 import java.util.List;
 
@@ -9,17 +9,17 @@ import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.School;
 import com.school.sba.exception.SchoolNotFoundByIdException;
-import com.school.sba.repository.ISchoolRepository;
-import com.school.sba.request.SchoolRequest;
-import com.school.sba.service.ISchoolService;
+import com.school.sba.repository.SchoolRepository;
+import com.school.sba.requestdto.SchoolRequest;
+import com.school.sba.service.SchoolService;
 import com.school.sba.util.ResponseStructure;
 
 
 @Service
-public class SchoolServiceImpl implements ISchoolService{
+public class SchoolServiceImpl implements SchoolService{
 
 	@Autowired
-	private ISchoolRepository schoolRepo;
+	private SchoolRepository schoolRepo;
 
 	@Autowired
 	private ResponseStructure<School> responseStructure;

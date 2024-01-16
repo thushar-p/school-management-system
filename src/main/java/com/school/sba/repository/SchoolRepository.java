@@ -7,6 +7,6 @@ import com.school.sba.entity.School;
 
 
 @Repository
-public interface ISchoolRepository extends JpaRepository<School, Integer>{
+public interface SchoolRepository extends JpaRepository<School, Integer>{
 
 }

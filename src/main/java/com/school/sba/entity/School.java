@@ -1,4 +1,4 @@
-package com.school.sba.entity;
+	package com.school.sba.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
