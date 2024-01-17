@@ -1,9 +1,12 @@
 	package com.school.sba.entity;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,5 +34,8 @@ public class School {
 	
 	@OneToOne
 	private Schedule schedule;
+	
+	@OneToMany(mappedBy = "school")
+	private List<AcademicProgram> listOfAcademicPrograms;
 	
 }

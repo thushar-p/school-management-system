@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.Schedule;
+import com.school.sba.entity.School;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
@@ -23,14 +24,14 @@ public class ScheduleServiceImpl implements ScheduleService{
 
 	@Autowired
 	private ScheduleRepository scheduleRepository;
-	
+
 	@Autowired
 	private SchoolRepository schoolRepository;
-	
+
 	@Autowired
 	private ResponseStructure<ScheduleResponse> structure;
-	
-	
+
+
 	private ScheduleResponse mapToScheduleResponse(Schedule schedule) {		
 		return ScheduleResponse.builder()
 				.scheduleId(schedule.getScheduleId())
@@ -63,67 +64,69 @@ public class ScheduleServiceImpl implements ScheduleService{
 				.lunchTime(scheduleRequest.getLunchTime())
 				.build();
 	}
-	
+
 	@Override
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> saveSchedule(int schoolId,
 			ScheduleRequest scheduleRequest) {
-		
+
 		return schoolRepository.findById(schoolId)
-		.map(school -> {
-			if(school.getSchedule() == null) {
-				Schedule schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
-				
-				school.setSchedule(schedule);
-				
-				schoolRepository.save(school);
-				
-				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setMessage("schedule added successfully");
-				structure.setData(mapToScheduleResponse(schedule));
-				
-				return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.CREATED);
-			}
-			else {
-				throw new ScheduleAlreadyPresentException("Schedule is already added");
-			}
-		})
-		.orElseThrow(() -> new SchoolNotFoundByIdException("school not found"));
-		
+				.map(school -> {
+					if(school.getSchedule() == null) {
+						Schedule schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
+
+						school.setSchedule(schedule);
+
+						schoolRepository.save(school);
+
+						structure.setStatus(HttpStatus.CREATED.value());
+						structure.setMessage("schedule added successfully");
+						structure.setData(mapToScheduleResponse(schedule));
+
+						return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.CREATED);
+					}
+					else {
+						throw new ScheduleAlreadyPresentException("Schedule is already added");
+					}
+				})
+				.orElseThrow(() -> new SchoolNotFoundByIdException("school not found"));
+
 	}
 
 	@Override
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> findSchedule(int schoolId) {
-		
-		return scheduleRepository.findById(schoolId)
-		.map(schedule -> {
-			structure.setStatus(HttpStatus.FOUND.value());
-			structure.setMessage("schedule found");
-			structure.setData(mapToScheduleResponse(schedule));
-			
-			return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.FOUND);
-		})
-		.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
-		
+
+		School school = schoolRepository.findById(schoolId)
+				.orElseThrow(() -> new SchoolNotFoundByIdException("School not found"));
+
+		return scheduleRepository.findById(school.getSchedule().getScheduleId())
+				.map(schedule -> {
+					structure.setStatus(HttpStatus.FOUND.value());
+					structure.setMessage("schedule found");
+					structure.setData(mapToScheduleResponse(schedule));
+
+					return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.FOUND);
+				})
+				.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+
 	}
 
 	@Override
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> updateSchedule(int scheduleId,
 			ScheduleRequest scheduleRequest) {
-		
-		 return scheduleRepository.findById(scheduleId)
-		.map(schedule -> {
-			schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
-			
-			structure.setStatus(HttpStatus.OK.value());
-			structure.setMessage("schedule updated successfully");
-			structure.setData(mapToScheduleResponse(schedule));
-			
-			return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.OK);
-		})
-		.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
-		 
+
+		return scheduleRepository.findById(scheduleId)
+				.map(schedule -> {
+					schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
+
+					structure.setStatus(HttpStatus.OK.value());
+					structure.setMessage("schedule updated successfully");
+					structure.setData(mapToScheduleResponse(schedule));
+
+					return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.OK);
+				})
+				.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+
 	}
 
-	
-	
+
 }

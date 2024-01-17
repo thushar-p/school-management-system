@@ -56,7 +56,7 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(SchoolCannotBeCreatedException.class)
 	public ResponseEntity<Object> handleAdminAlreadyExistException(SchoolCannotBeCreatedException exception) {
-		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "school cannot be created beacuse admin is not present");
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "school cannot be created beacuse");
 	}
 	
 	@ExceptionHandler(UserNotFoundByIdException.class)

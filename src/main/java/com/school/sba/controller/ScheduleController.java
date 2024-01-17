@@ -31,6 +31,7 @@ public class ScheduleController {
 		return scheduleService.findSchedule(schoolId);
 	}
 	
+	// validation should be performed on the requests
 	@PutMapping("schedules/{scheduleId}")
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> updateSchedule(@PathVariable("scheduleId") int scheduleId,
 			@RequestBody ScheduleRequest scheduleRequest){
