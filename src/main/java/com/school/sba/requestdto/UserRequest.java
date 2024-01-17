@@ -1,13 +1,15 @@
 package com.school.sba.requestdto;
 
+import com.school.sba.entity.School;
 import com.school.sba.enums.UserRole;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -18,12 +20,12 @@ public class UserRequest {
 	@NotBlank(message = "user name should not be empty")
 	private String userName;
 	
-	@Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters")
-	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$", message = "Password must contain at least "
-			+ "one uppercase letter"
-			+ "one lowercase letter"
-			+ "one number"
-			+ "one special character")
+//	@Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters")
+//	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$", message = "Password must contain at least "
+//			+ "one uppercase letter"
+//			+ "one lowercase letter"
+//			+ "one number"
+//			+ "one special character")
 	private String userPassword;
 	
 	@NotEmpty(message = "first name should not be empty")
@@ -36,7 +38,11 @@ public class UserRequest {
 	private Long userContact;
 	
 	@NotEmpty(message = "email should not be empty")
+//	@Email(regexp = "[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-z]{2,}", message = "invalid email")
 	private String userEmail;
+	
+	private School school;
+	
 	private UserRole userRole;
 
 }

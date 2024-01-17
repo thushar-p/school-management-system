@@ -1,8 +1,5 @@
 package com.school.sba.serviceimpl;
 
-import java.util.List;
-import java.util.function.Function;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.User;
 import com.school.sba.enums.UserRole;
-import com.school.sba.exception.AdminAlreadyExistException;
+import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.UserRequest;
@@ -23,10 +20,10 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private UserRepository userRepository;
-
+	
 	@Autowired
 	private ResponseStructure<UserResponse> structure;
-
+	
 	private User mapToUser(UserRequest userRequest) {
 		return User.builder().userName(userRequest.getUserName())
 				.userPassword(userRequest.getUserPassword())
@@ -35,6 +32,7 @@ public class UserServiceImpl implements UserService {
 				.userEmail(userRequest.getUserEmail())
 				.userContact(userRequest.getUserContact())
 				.userRole(userRequest.getUserRole())
+				.school(userRequest.getSchool())
 				.build();
 	}
 
@@ -54,7 +52,7 @@ public class UserServiceImpl implements UserService {
 
 		if (userRequest.getUserRole().equals(UserRole.ADMIN)) {
 			if (userRepository.existsByIsDeletedAndUserRole(false , userRequest.getUserRole()))  {
-				throw new AdminAlreadyExistException("Admin already exist");
+				throw new SchoolCannotBeCreatedException("Admin already exist");
 			} 
 			else {
 				if(userRepository.existsByIsDeletedAndUserRole(true, userRequest.getUserRole())) {
@@ -110,7 +108,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId) {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
-		
+
 		if(user.isDeleted()) {
 			throw new UserNotFoundByIdException("User already deleted");
 		}
@@ -141,11 +139,6 @@ public class UserServiceImpl implements UserService {
 		structure.setData(mapToUserResponse(user));
 
 		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
-	}
-
-	@Override
-	public ResponseEntity<ResponseStructure<List<UserResponse>>> getTeacher() {
-		return null;
 	}
 
 

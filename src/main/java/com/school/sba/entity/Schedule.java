@@ -1,5 +1,6 @@
 package com.school.sba.entity;
 
+import java.time.Duration;
 import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
@@ -20,7 +21,7 @@ public class Schedule {
 	private LocalTime opensAt;
 	private LocalTime closesAt;
 	private Integer classHoursPerDay;
-	private LocalTime classHoursLength;
+	private Duration classHoursLength;
 	private LocalTime breakTime;
 	private LocalTime beakLength;
 	private LocalTime lunchTime;

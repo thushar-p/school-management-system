@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.school.sba.exception.AdminAlreadyExistException;
+import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
 import com.school.sba.exception.UserNotFoundByIdException;
 
@@ -52,9 +52,9 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "school not found by id in database");
 	}
 
-	@ExceptionHandler(AdminAlreadyExistException.class)
-	public ResponseEntity<Object> handleAdminAlreadyExistException(AdminAlreadyExistException exception) {
-		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "Admin is already present in database");
+	@ExceptionHandler(SchoolCannotBeCreatedException.class)
+	public ResponseEntity<Object> handleAdminAlreadyExistException(SchoolCannotBeCreatedException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "school cannot be created beacuse admin is not present");
 	}
 	
 	@ExceptionHandler(UserNotFoundByIdException.class)

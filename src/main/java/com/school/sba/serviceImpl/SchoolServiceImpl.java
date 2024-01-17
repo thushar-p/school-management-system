@@ -1,16 +1,19 @@
 package com.school.sba.serviceimpl;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.School;
+import com.school.sba.enums.UserRole;
+import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
+import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.SchoolRepository;
+import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.SchoolRequest;
+import com.school.sba.responsedto.SchoolResponse;
 import com.school.sba.service.SchoolService;
 import com.school.sba.util.ResponseStructure;
 
@@ -22,10 +25,13 @@ public class SchoolServiceImpl implements SchoolService{
 	private SchoolRepository schoolRepo;
 
 	@Autowired
-	private ResponseStructure<School> responseStructure;
+	private UserRepository userRepo;
 
-	
-	private School mapToUser(SchoolRequest schoolRequest) {
+	@Autowired
+	private ResponseStructure<SchoolResponse> responseStructure;
+
+
+	private School mapToSchool(SchoolRequest schoolRequest) {
 		return School.builder()
 				.schoolName(schoolRequest.getSchoolName())
 				.schoolEmailId(schoolRequest.getSchoolEmailId())
@@ -33,24 +39,52 @@ public class SchoolServiceImpl implements SchoolService{
 				.schoolAddress(schoolRequest.getSchoolAddress())
 				.build();
 	}
-	
+
+	private SchoolResponse mapToUserResponse(School school) {
+		return SchoolResponse.builder()
+				.schoolId(school.getSchoolId())
+				.schoolName(school.getSchoolName())
+				.schoolEmailId(school.getSchoolEmailId())
+				.schoolContactNumber(school.getSchoolContactNumber())
+				.schoolAddress(school.getSchoolAddress())
+				.build();
+	}
+
 	@Override
-	public ResponseEntity<ResponseStructure<School>> saveSchool(SchoolRequest schoolRequest){
+	public ResponseEntity<ResponseStructure<SchoolResponse>> createSchool(int userId, SchoolRequest schoolRequest){
 
-		School saveStudent = schoolRepo.save(mapToUser(schoolRequest));
+		return userRepo.findById(userId)
+				.map(user -> {
+					if(user.getUserRole().equals(UserRole.ADMIN)) {
+						if(user.getSchool() == null) {
+							School school = schoolRepo.save(mapToSchool(schoolRequest));
 
-		responseStructure.setStatus(HttpStatus.CREATED.value());
-		responseStructure.setMessage("School data inserted successfully");
-		responseStructure.setData(saveStudent);
+							user.setSchool(school);
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.CREATED);
+							userRepo.save(user);
+
+							responseStructure.setStatus(HttpStatus.CREATED.value());
+							responseStructure.setMessage("School inserted successfully");
+							responseStructure.setData(mapToUserResponse(school));
+
+							return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.CREATED);
+						}
+						else {
+							throw new SchoolCannotBeCreatedException("school is already present");
+						}
+					}
+					else {
+						throw new SchoolCannotBeCreatedException("school can be created only by ADMIN");
+					}
+				})
+				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
 	}
 
 
 
 	@Override
-	public ResponseEntity<ResponseStructure<School>> deleteSchool(Integer schoolId) {
+	public ResponseEntity<ResponseStructure<SchoolResponse>> deleteSchool(Integer schoolId) {
 
 		School existingSchool = schoolRepo.findById(schoolId)
 				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be deleted due to absence of school id"));
@@ -59,20 +93,20 @@ public class SchoolServiceImpl implements SchoolService{
 
 		responseStructure.setStatus(HttpStatus.OK.value());
 		responseStructure.setMessage("School data deleted successfully from database");
-		responseStructure.setData(existingSchool);
+		responseStructure.setData(mapToUserResponse(existingSchool));
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.OK);
+		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
 	}
-	
-	
+
+
 
 	@Override
-	public ResponseEntity<ResponseStructure<School>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
+	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
 			throws SchoolNotFoundByIdException {
 
 		School existingSchool = schoolRepo.findById(schoolId)
 				.map(u -> {
-					School school = mapToUser(schoolRequest);
+					School school = mapToSchool(schoolRequest);
 					school.setSchoolId(schoolId);
 					return schoolRepo.save(school);
 				})
@@ -81,16 +115,16 @@ public class SchoolServiceImpl implements SchoolService{
 
 		responseStructure.setStatus(HttpStatus.OK.value());
 		responseStructure.setMessage("School data updated successfully in database");
-		responseStructure.setData(existingSchool);
+		responseStructure.setData(mapToUserResponse(existingSchool));
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.OK);
+		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
 
 	}
-	
-	
+
+
 
 	@Override
-	public ResponseEntity<ResponseStructure<School>> findSchool(Integer schoolId)
+	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(Integer schoolId)
 			throws SchoolNotFoundByIdException {
 
 		School fetchedSchool = schoolRepo.findById(schoolId)
@@ -99,24 +133,24 @@ public class SchoolServiceImpl implements SchoolService{
 
 		responseStructure.setStatus(HttpStatus.FOUND.value());
 		responseStructure.setMessage("School data found in database");
-		responseStructure.setData(fetchedSchool);
+		responseStructure.setData(mapToUserResponse(fetchedSchool));
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.FOUND);
-
-	}
-
-	@Override
-	public ResponseEntity<ResponseStructure<List<School>>> findAllSchool() {
-
-		List<School> all = schoolRepo.findAll();
-
-		ResponseStructure<List<School>> rs = new ResponseStructure<List<School>>();
-		rs.setStatus(HttpStatus.FOUND.value());
-		rs.setMessage("School data found in database");
-		rs.setData(all);
-
-		return new ResponseEntity<ResponseStructure<List<School>>>(rs, HttpStatus.FOUND);
+		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.FOUND);
 
 	}
+
+	//	@Override
+	//	public ResponseEntity<ResponseStructure<List<SchoolResponse>>> findAllSchool() {
+	//
+	//		List<School> all = schoolRepo.findAll();
+	//
+	//		ResponseStructure<List<SchoolResponse>> rs = new ResponseStructure<List<SchoolResponse>>();
+	//		rs.setStatus(HttpStatus.FOUND.value());
+	//		rs.setMessage("School data found in database");
+	//		rs.setData(all);
+	//
+	//		return new ResponseEntity<ResponseStructure<List<SchoolResponse>>>(rs, HttpStatus.FOUND);
+	//
+	//	}
 
 }

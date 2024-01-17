@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AdminAlreadyExistException extends RuntimeException {
+public class SchoolCannotBeCreatedException extends RuntimeException {
 	
 	/**
 	 * 
