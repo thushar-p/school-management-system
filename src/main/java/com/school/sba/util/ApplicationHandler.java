@@ -17,6 +17,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.school.sba.exception.ScheduleAlreadyPresentException;
+import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
 import com.school.sba.exception.UserNotFoundByIdException;
@@ -66,6 +67,11 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(ScheduleAlreadyPresentException.class)
 	public ResponseEntity<Object> handleScheduleAlreadyPresentException(ScheduleAlreadyPresentException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "Schedule is already present and assigned to school");
+	}
+	
+	@ExceptionHandler(ScheduleNotFoundException.class)
+	public ResponseEntity<Object> handleScheduleNotFoundException(ScheduleNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "Schedule not found, Try adding the schedule first");
 	}
 	
 	

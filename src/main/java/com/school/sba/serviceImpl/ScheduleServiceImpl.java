@@ -1,7 +1,6 @@
 package com.school.sba.serviceimpl;
 
 import java.time.Duration;
-import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.Schedule;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
+import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
 import com.school.sba.repository.ScheduleRepository;
 import com.school.sba.repository.SchoolRepository;
@@ -31,11 +31,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	private ResponseStructure<ScheduleResponse> structure;
 	
 	
-	private ScheduleResponse mapToScheduleResponse(Schedule schedule) {
-		
-		
-		long m = Duration.ofMinutes(schedule.getClassHoursLengthInMinutes().toMinutes()).toSeconds();
-		
+	private ScheduleResponse mapToScheduleResponse(Schedule schedule) {		
 		return ScheduleResponse.builder()
 				.scheduleId(schedule.getScheduleId())
 				.opensAt(schedule.getOpensAt())
@@ -95,6 +91,39 @@ public class ScheduleServiceImpl implements ScheduleService{
 		
 	}
 
-	
+	@Override
+	public ResponseEntity<ResponseStructure<ScheduleResponse>> findSchedule(int schoolId) {
+		
+		return scheduleRepository.findById(schoolId)
+		.map(schedule -> {
+			structure.setStatus(HttpStatus.FOUND.value());
+			structure.setMessage("schedule found");
+			structure.setData(mapToScheduleResponse(schedule));
+			
+			return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.FOUND);
+		})
+		.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+		
+	}
 
+	@Override
+	public ResponseEntity<ResponseStructure<ScheduleResponse>> updateSchedule(int scheduleId,
+			ScheduleRequest scheduleRequest) {
+		
+		 return scheduleRepository.findById(scheduleId)
+		.map(schedule -> {
+			schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
+			
+			structure.setStatus(HttpStatus.OK.value());
+			structure.setMessage("schedule updated successfully");
+			structure.setData(mapToScheduleResponse(schedule));
+			
+			return new ResponseEntity<ResponseStructure<ScheduleResponse>>(structure, HttpStatus.OK);
+		})
+		.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+		 
+	}
+
+	
+	
 }
