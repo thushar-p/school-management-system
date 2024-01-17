@@ -57,7 +57,6 @@ public class UserServiceImpl implements UserService {
 			else {
 				if(userRepository.existsByIsDeletedAndUserRole(true, userRequest.getUserRole())) {
 					User user = userRepository.save(mapToUser(userRequest));
-					System.out.println(1);
 
 					structure.setStatus(HttpStatus.CREATED.value());
 					structure.setMessage("user saved successfully");
@@ -67,7 +66,6 @@ public class UserServiceImpl implements UserService {
 				}
 				else {
 					User user = userRepository.save(mapToUser(userRequest));
-					System.out.println(2);
 
 					structure.setStatus(HttpStatus.CREATED.value());
 					structure.setMessage("user saved successfully");
@@ -79,7 +77,7 @@ public class UserServiceImpl implements UserService {
 		}
 		else {
 			User user = userRepository.save(mapToUser(userRequest));
-			System.out.println(3);
+			
 			structure.setStatus(HttpStatus.CREATED.value());
 			structure.setMessage("user saved successfully");
 			structure.setData(mapToUserResponse(user));
