@@ -38,19 +38,16 @@ public class SubjectServiceImpl implements SubjectService{
 				.map(academicProgram -> {
 					List<Subject> listOfSubjects = new ArrayList<Subject>();
 					
-					System.out.println(subjectRequest);
-					
 					subjectRequest.getSubjectNames().forEach(name -> {
-						subjectRepository.findBySubjectName(name.toLowerCase()).map(subject -> {
-							listOfSubjects.add(subject);
-							return null;
+						Subject fetchedSubject = subjectRepository.findBySubjectName(name.toLowerCase()).map(subject -> {
+							return subject;
 						}).orElseGet( () -> {
 							Subject subject = new Subject();
 							subject.setSubjectName(name.toLowerCase());
 							subjectRepository.save(subject);
-							listOfSubjects.add(subject);
-							return null;
+							return subject;
 						});
+						listOfSubjects.add(fetchedSubject);
 					});
 					
 					academicProgram.setListOfSubject(listOfSubjects);
@@ -71,10 +68,35 @@ public class SubjectServiceImpl implements SubjectService{
 	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(int programId,
 			SubjectRequest subjectRequest) {
 		
-		academicProgramRepository.findById(programId)
+		return academicProgramRepository.findById(programId)
+		.map(academicProgram -> {
+			
+			List<Subject> listOfSubjects = new ArrayList<Subject>();
+			
+			subjectRequest.getSubjectNames().forEach(name -> {
+				subjectRepository.findAll().forEach(nameFromDB -> {
+					if(name.equalsIgnoreCase(nameFromDB.getSubjectName())) {
+						listOfSubjects.add(nameFromDB);
+					}
+					else {
+						Subject subject = new Subject();
+						subject.setSubjectName(name.toLowerCase());
+						subjectRepository.save(subject);
+						listOfSubjects.add(subject);
+					}
+				});
+			});
+			academicProgram.setListOfSubject(listOfSubjects);
+			academicProgramRepository.save(academicProgram);
+			
+			structure.setStatus(HttpStatus.CREATED.value());
+			structure.setMessage("subjects have been updated successfully");
+			structure.setData(academicProgramServiceImpl.mapToAcademicProgramResponse(academicProgram));
+			
+			return new ResponseEntity<ResponseStructure<AcademicProgramResponse>>(structure, HttpStatus.CREATED);
+			
+		})
 		.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
-		
-		return null;
 	
 	}
 
