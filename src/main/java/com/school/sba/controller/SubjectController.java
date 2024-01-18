@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,10 +24,10 @@ public class SubjectController {
 		return subjectService.addSubject(programId, subjectRequest);
 	}
 	
-	@PutMapping("/academic-programs/{programId}")
-	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(@PathVariable("programId") int programId,
-			@RequestBody SubjectRequest subjectRequest){
-		return subjectService.updateSubject(programId, subjectRequest);
-	}
+//	@PutMapping("/academic-programs/{programId}")
+//	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(@PathVariable("programId") int programId,
+//			@RequestBody SubjectRequest subjectRequest){
+//		return subjectService.updateSubject(programId, subjectRequest);
+//	}
 
 }

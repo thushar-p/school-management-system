@@ -57,12 +57,12 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(SchoolCannotBeCreatedException.class)
 	public ResponseEntity<Object> handleAdminAlreadyExistException(SchoolCannotBeCreatedException exception) {
-		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "school cannot be created beacuse");
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "school is already present");
 	}
 	
 	@ExceptionHandler(UserNotFoundByIdException.class)
 	public ResponseEntity<Object> handleUserNotFoundByIdException(UserNotFoundByIdException exception) {
-		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "use not found by id by in database");
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "user not found by id by in database");
 	}
 	
 	@ExceptionHandler(ScheduleAlreadyPresentException.class)

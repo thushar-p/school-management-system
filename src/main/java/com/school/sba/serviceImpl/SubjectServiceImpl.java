@@ -64,41 +64,72 @@ public class SubjectServiceImpl implements SubjectService{
 
 	}
 
-	@Override
-	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(int programId,
-			SubjectRequest subjectRequest) {
-		
-		return academicProgramRepository.findById(programId)
-		.map(academicProgram -> {
-			
-			List<Subject> listOfSubjects = new ArrayList<Subject>();
-			
-			subjectRequest.getSubjectNames().forEach(name -> {
-				subjectRepository.findAll().forEach(nameFromDB -> {
-					if(name.equalsIgnoreCase(nameFromDB.getSubjectName())) {
-						listOfSubjects.add(nameFromDB);
-					}
-					else {
-						Subject subject = new Subject();
-						subject.setSubjectName(name.toLowerCase());
-						subjectRepository.save(subject);
-						listOfSubjects.add(subject);
-					}
-				});
-			});
-			academicProgram.setListOfSubject(listOfSubjects);
-			academicProgramRepository.save(academicProgram);
-			
-			structure.setStatus(HttpStatus.CREATED.value());
-			structure.setMessage("subjects have been updated successfully");
-			structure.setData(academicProgramServiceImpl.mapToAcademicProgramResponse(academicProgram));
-			
-			return new ResponseEntity<ResponseStructure<AcademicProgramResponse>>(structure, HttpStatus.CREATED);
-			
-		})
-		.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
-	
-	}
+//	@Override
+//	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(int programId,
+//			SubjectRequest subjectRequest) {
+//		
+//		return academicProgramRepository.findById(programId)
+//		.map(academicProgram -> {
+//			
+//			List<Subject> listOfSubjects = new ArrayList<Subject>();
+//			
+//			List<Subject> listOfSubjectsFromDB = subjectRepository.findAll();
+//			
+//			List<String> subjectNames = subjectRequest.getSubjectNames();
+//			 
+//			Set<String> setOfSubjectNames = new HashSet<String>();
+//
+//			subjectNames.forEach(name -> {
+//				setOfSubjectNames.add(name.toLowerCase());
+//			});
+//			
+//			listOfSubjectsFromDB.forEach(sub -> {
+//				
+//				boolean check = setOfSubjectNames.add(sub.getSubjectName().toLowerCase());
+//				if(check) {
+//					listOfSubjects.add(sub);
+//				}
+//				else {
+//					setOfSubjectNames.remove(sub.getSubjectName().toLowerCase());
+//				}
+//				
+//			});
+//
+//            listOfSubjectsFromDB.forEach(sub -> {
+//                subjectNames.forEach(name -> {
+//                    boolean b = sub.getSubjectName().toLowerCase().equals(name.toLowerCase());
+//
+//                    if(b) {
+//                    	listOfSubjects.add(sub);
+//                    }
+//                    if(b == false){
+//                        setOfSubjectNames.remove(sub.getSubjectName().toLowerCase());
+//                    }
+//
+//                });
+//            });
+//
+//			setOfSubjectNames.forEach(name -> {
+//				Subject subject = new Subject();
+//				subject.setSubjectName(name);
+//				listOfSubjects.add(subject);
+//				subjectRepository.save(subject);
+//			});
+//			System.out.println(setOfSubjectNames);
+//			
+//			academicProgram.setListOfSubject(listOfSubjects);
+//			academicProgramRepository.save(academicProgram);
+//			
+//			structure.setStatus(HttpStatus.CREATED.value());
+//			structure.setMessage("subjects have been updated successfully");
+//			structure.setData(academicProgramServiceImpl.mapToAcademicProgramResponse(academicProgram));
+//			
+//			return new ResponseEntity<ResponseStructure<AcademicProgramResponse>>(structure, HttpStatus.CREATED);
+//			
+//		})
+//		.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
+//	
+//	}
 
 
 }

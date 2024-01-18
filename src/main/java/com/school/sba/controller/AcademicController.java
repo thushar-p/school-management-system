@@ -7,10 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.sba.requestdto.AcademicProgramRequest;
+import com.school.sba.requestdto.SubjectRequest;
 import com.school.sba.responsedto.AcademicProgramResponse;
 import com.school.sba.service.AcademicProgramService;
 import com.school.sba.util.ResponseStructure;
@@ -30,6 +32,12 @@ public class AcademicController {
 	@GetMapping("/schools/{schoolId}/academic-programs")
 	public ResponseEntity<ResponseStructure<List<AcademicProgramResponse>>> findAllAcademicProgram(@PathVariable("schoolId") int schoolId){
 		return academicProgramService.findAllAcademicProgram(schoolId);
+	}
+	
+	@PutMapping("/academic-programs/{programId}")
+	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(@PathVariable("programId") int programId,
+			@RequestBody SubjectRequest subjectRequest){
+		return academicProgramService.updateSubject(programId, subjectRequest);
 	}
 	
 }
