@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
@@ -74,6 +75,9 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "Schedule not found, Try adding the schedule first");
 	}
 	
-	
+	@ExceptionHandler(AcademicProgramNotFoundException.class)
+	public ResponseEntity<Object> handleAcademicProgramNotFoundException(AcademicProgramNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "Academic program not found, Try adding the acadamic first");
+	}
 
 }

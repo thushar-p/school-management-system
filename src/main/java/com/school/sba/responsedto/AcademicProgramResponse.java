@@ -1,6 +1,7 @@
 package com.school.sba.responsedto;
 
 import java.time.LocalTime;
+import java.util.List;
 
 import com.school.sba.enums.ProgramType;
 
@@ -22,5 +23,7 @@ public class AcademicProgramResponse {
 	private String programName;
 	private LocalTime programBeginsAt;
 	private LocalTime programEndsAt;
+	
+	private List<String> listOfSubjects;
 
 }

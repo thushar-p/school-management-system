@@ -1,9 +1,7 @@
 package com.school.sba.responsedto;
 
-import java.time.Duration;
 import java.time.LocalTime;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
