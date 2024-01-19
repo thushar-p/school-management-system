@@ -17,6 +17,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.school.sba.exception.AcademicProgramNotFoundException;
+import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
+import com.school.sba.exception.AdminNotFoundException;
+import com.school.sba.exception.OnlyAdminCanCreateSchoolException;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
@@ -78,6 +81,21 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(AcademicProgramNotFoundException.class)
 	public ResponseEntity<Object> handleAcademicProgramNotFoundException(AcademicProgramNotFoundException exception) {
 		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "Academic program not found, Try adding the acadamic first");
+	}
+	
+	@ExceptionHandler(AdminNotFoundException.class)
+	public ResponseEntity<Object> handleAdminNotFoundException(AdminNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "admin not found");
+	}
+	
+	@ExceptionHandler(OnlyAdminCanCreateSchoolException.class)
+	public ResponseEntity<Object> handleOnlyAdminCanCreateSchoolException(OnlyAdminCanCreateSchoolException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "only admin is able to create school");
+	}
+	
+	@ExceptionHandler(AdminCannotBeAssignedToAcademicProgram.class)
+	public ResponseEntity<Object> handleAdminCannotBeAssignedToAcademicProgram(AdminCannotBeAssignedToAcademicProgram exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "admin cannot be assigned to academic programs");
 	}
 
 }

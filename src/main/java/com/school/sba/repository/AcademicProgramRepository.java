@@ -8,4 +8,6 @@ import com.school.sba.entity.AcademicProgram;
 @Repository
 public interface AcademicProgramRepository extends JpaRepository<AcademicProgram, Integer>{
 	
+	
+	
 }

@@ -44,4 +44,10 @@ public class UserController {
 		return userService.updateUser(userId, userRequest);
 	}
 	
+	@PutMapping("/academic-programs/{programId}/users/{userId}")
+	public ResponseEntity<ResponseStructure<UserResponse>> assignTeacherAndStudent(@PathVariable("programId") int programId,
+			@PathVariable("userId") int userId){
+		return userService.assignTeacherAndStudent(programId, userId);
+	}
+	
 }

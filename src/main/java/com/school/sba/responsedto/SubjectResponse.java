@@ -1,7 +1,5 @@
 package com.school.sba.responsedto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,5 +13,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SubjectResponse {
 	private int subjectId;
-	private List<String> subjectNames;
+	private String subjectNames;
 }
