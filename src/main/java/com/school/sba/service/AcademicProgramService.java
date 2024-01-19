@@ -15,6 +15,4 @@ public interface AcademicProgramService {
 
 	ResponseEntity<ResponseStructure<List<AcademicProgramResponse>>> findAllAcademicProgram(int schoolId);
 
-//	ResponseEntity<ResponseStructure<AcademicProgramResponse>> updateSubject(int programId,
-//			SubjectRequest subjectRequest);
 }

@@ -49,4 +49,7 @@ public class User {
 	
 	@ManyToMany(mappedBy = "listOfUsers")
 	private List<AcademicProgram> listOfAcademicPrograms;
+	
+	@ManyToOne
+	private Subject subject;
 }

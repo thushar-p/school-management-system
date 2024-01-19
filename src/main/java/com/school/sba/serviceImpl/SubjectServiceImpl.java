@@ -35,17 +35,17 @@ public class SubjectServiceImpl implements SubjectService{
 
 	@Autowired
 	private AcademicProgramServiceImpl academicProgramServiceImpl;
-	
+
 	private List<SubjectResponse> mapTOListOfSubjectResponse(List<Subject> listOfSubjects) {
 		List<SubjectResponse> listOfSubjectResponse = new ArrayList<>();
-		
+
 		listOfSubjects.forEach(subject -> {
 			SubjectResponse sr = new SubjectResponse();
 			sr.setSubjectId(subject.getSubjectId());
 			sr.setSubjectNames(subject.getSubjectName());
 			listOfSubjectResponse.add(sr);
 		});
-		
+
 		return listOfSubjectResponse;
 	}
 
@@ -68,7 +68,7 @@ public class SubjectServiceImpl implements SubjectService{
 									.orElseGet(() -> subjectRepository.save(Subject.builder().subjectName(name).build())));
 						}
 					});
-					
+
 
 					//to remove the subject that are not specified by the client
 					List<Subject> toBeRemoved = new ArrayList<Subject>();
@@ -80,11 +80,11 @@ public class SubjectServiceImpl implements SubjectService{
 						}
 						if(!isPresent) toBeRemoved.add(subject);
 					});
-					
+
 					listOfSubjects.removeAll(toBeRemoved);
 
 					academicProgram.setListOfSubject(listOfSubjects);
-					
+
 					academicProgramRepository.save(academicProgram);
 
 					structure.setStatus(HttpStatus.CREATED.value());
@@ -119,7 +119,7 @@ public class SubjectServiceImpl implements SubjectService{
 
 	}
 
-	
+
 
 
 }

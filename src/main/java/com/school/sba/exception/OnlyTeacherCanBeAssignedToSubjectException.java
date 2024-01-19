@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AdminNotFoundException extends RuntimeException {
+public class OnlyTeacherCanBeAssignedToSubjectException extends RuntimeException {
 	/**
 	 * 
 	 */

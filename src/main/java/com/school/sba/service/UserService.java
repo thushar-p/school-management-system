@@ -16,7 +16,9 @@ public interface UserService {
 
 	ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest);
 
-	ResponseEntity<ResponseStructure<UserResponse>> assignTeacherAndStudent(int programId, int userId);
+	ResponseEntity<ResponseStructure<UserResponse>> assignToAcademicProgram(int programId, int userId);
+
+	ResponseEntity<ResponseStructure<UserResponse>> assignSubjectToTeacher(int subjectId, int userId);
 
 
 }

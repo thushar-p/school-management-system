@@ -45,9 +45,15 @@ public class UserController {
 	}
 	
 	@PutMapping("/academic-programs/{programId}/users/{userId}")
-	public ResponseEntity<ResponseStructure<UserResponse>> assignTeacherAndStudent(@PathVariable("programId") int programId,
+	public ResponseEntity<ResponseStructure<UserResponse>> assignToAcademicProgram(@PathVariable("programId") int programId,
 			@PathVariable("userId") int userId){
-		return userService.assignTeacherAndStudent(programId, userId);
+		return userService.assignToAcademicProgram(programId, userId);
+	}
+	
+	@PutMapping("/subjects/{subjectId}/users/{userId}")
+	public ResponseEntity<ResponseStructure<UserResponse>> assignSubjectToTeacher(@PathVariable("subjectId") int subjectId,
+			@PathVariable("userId") int userId){
+		return userService.assignSubjectToTeacher(subjectId,userId);
 	}
 	
 }

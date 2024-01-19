@@ -38,6 +38,7 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 	public AcademicProgramResponse mapToAcademicProgramResponse(AcademicProgram academicProgram) {
 
 		List<String> subjects = new ArrayList<String>();
+		
 		List<Subject> listOfSubject = academicProgram.getListOfSubject();
 
 		if(listOfSubject != null) {
