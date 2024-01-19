@@ -136,7 +136,7 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 			
 			List<Subject> listOfSubjects = new ArrayList<Subject>();
 			
-			List<Subject> listOfSubjectsFromDB = subjectRepository.findAllByProgramId(programId);
+			List<Subject> listOfSubjectsFromDB = subjectRepository.findAll();
 			
 			List<String> subjectNames = subjectRequest.getSubjectNames();
 			 

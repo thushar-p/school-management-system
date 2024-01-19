@@ -116,7 +116,9 @@ public class ScheduleServiceImpl implements ScheduleService{
 
 		return scheduleRepository.findById(scheduleId)
 				.map(schedule -> {
-					schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
+					Schedule mapToSchedule = mapToSchedule(scheduleRequest);
+					mapToSchedule.setScheduleId(scheduleId);
+					schedule = scheduleRepository.save(mapToSchedule);
 
 					structure.setStatus(HttpStatus.OK.value());
 					structure.setMessage("schedule updated successfully");
