@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.User;
@@ -29,6 +30,9 @@ import com.school.sba.util.ResponseStructure;
 public class UserServiceImpl implements UserService {
 
 	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
@@ -40,9 +44,13 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private ResponseStructure<UserResponse> structure;
 
+	
+	/*
+	 * map from UserRequest object to User object
+	 */
 	private User mapToUser(UserRequest userRequest) {
 		return User.builder().userName(userRequest.getUserName())
-				.userPassword(userRequest.getUserPassword())
+				.userPassword(passwordEncoder.encode(userRequest.getUserPassword()))
 				.userFirstName(userRequest.getUserFirstName())
 				.userLastName(userRequest.getUserLastName())
 				.userEmail(userRequest.getUserEmail())
@@ -53,6 +61,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 
+	/*
+	 * map from User object to UserResponse
+	 */
 	private UserResponse mapToUserResponse(User user) {
 
 		List<String> listOfProgramName = new ArrayList<>();
@@ -76,7 +87,13 @@ public class UserServiceImpl implements UserService {
 				.build();
 	}
 
-
+	
+	
+	/*
+	 * saveUser() -> the first user that should be saved is Admin 
+	 * -> Admin is responsible for the creation of student and teacher 
+	 * -> if the Admin is not present in the database we cannot create teacher or student
+	 */
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> saveUser(UserRequest userRequest) {
 
@@ -123,6 +140,7 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId) {
 
@@ -135,7 +153,6 @@ public class UserServiceImpl implements UserService {
 
 		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
 	}
-
 
 
 	@Override
