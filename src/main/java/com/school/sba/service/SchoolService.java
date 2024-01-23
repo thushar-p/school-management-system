@@ -16,6 +16,4 @@ public interface SchoolService {
 
 	ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(Integer schoolId);
 
-//	ResponseEntity<ResponseStructure<List<SchoolResponse>>> findAllSchool();
-
 }

@@ -139,18 +139,5 @@ public class SchoolServiceImpl implements SchoolService{
 
 	}
 
-	//	@Override
-	//	public ResponseEntity<ResponseStructure<List<SchoolResponse>>> findAllSchool() {
-	//
-	//		List<School> all = schoolRepo.findAll();
-	//
-	//		ResponseStructure<List<SchoolResponse>> rs = new ResponseStructure<List<SchoolResponse>>();
-	//		rs.setStatus(HttpStatus.FOUND.value());
-	//		rs.setMessage("School data found in database");
-	//		rs.setData(all);
-	//
-	//		return new ResponseEntity<ResponseStructure<List<SchoolResponse>>>(rs, HttpStatus.FOUND);
-	//
-	//	}
 
 }
