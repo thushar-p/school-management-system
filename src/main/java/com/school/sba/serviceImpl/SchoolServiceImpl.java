@@ -3,6 +3,7 @@ package com.school.sba.serviceimpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.School;
@@ -51,9 +52,16 @@ public class SchoolServiceImpl implements SchoolService{
 	}
 
 	@Override
-	public ResponseEntity<ResponseStructure<SchoolResponse>> createSchool(int userId, SchoolRequest schoolRequest){
+	public ResponseEntity<ResponseStructure<SchoolResponse>> createSchool(SchoolRequest schoolRequest){
 
-		return userRepo.findById(userId)
+		String username = SecurityContextHolder.getContext()
+				.getAuthentication()
+				.getName();
+		
+		// no need of taking the userId from the url beacuse we are retriving the username from the securityContextHolder.
+		// no need of passing the userId unless or until we have to deal with the another user.
+		
+		return userRepo.findByUserName(username)
 				.map(user -> {
 					if(user.getUserRole().equals(UserRole.ADMIN)) {
 						if(user.getSchool() == null) {
@@ -84,6 +92,28 @@ public class SchoolServiceImpl implements SchoolService{
 
 
 	@Override
+	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
+			throws SchoolNotFoundByIdException {
+
+		return schoolRepo.findById(schoolId)
+				.map( school -> {
+					school = mapToSchool(schoolRequest);
+					school.setSchoolId(schoolId);
+					school = schoolRepo.save(school);
+					
+					responseStructure.setStatus(HttpStatus.OK.value());
+					responseStructure.setMessage("School data updated successfully in database");
+					responseStructure.setData(mapToUserResponse(school));
+
+					return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
+				})
+				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be updated due to absence of technical problems"));
+
+	}
+	
+	/*
+
+	@Override
 	public ResponseEntity<ResponseStructure<SchoolResponse>> deleteSchool(Integer schoolId) {
 
 		School existingSchool = schoolRepo.findById(schoolId)
@@ -97,31 +127,6 @@ public class SchoolServiceImpl implements SchoolService{
 
 		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
 	}
-
-
-
-	@Override
-	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
-			throws SchoolNotFoundByIdException {
-
-		School existingSchool = schoolRepo.findById(schoolId)
-				.map(u -> {
-					School school = mapToSchool(schoolRequest);
-					school.setSchoolId(schoolId);
-					return schoolRepo.save(school);
-				})
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be updated due to absence of technical problems"));
-
-
-		responseStructure.setStatus(HttpStatus.OK.value());
-		responseStructure.setMessage("School data updated successfully in database");
-		responseStructure.setData(mapToUserResponse(existingSchool));
-
-		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
-
-	}
-
-
 
 	@Override
 	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(Integer schoolId)
@@ -138,6 +143,8 @@ public class SchoolServiceImpl implements SchoolService{
 		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.FOUND);
 
 	}
+	
+	*/
 
 
 }

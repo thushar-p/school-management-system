@@ -17,6 +17,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.school.sba.exception.AcademicProgramNotFoundException;
+import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.OnlyAdminCanCreateSchoolException;
@@ -108,5 +109,10 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(OnlyTeacherCanBeAssignedToSubjectException.class)
 	public ResponseEntity<Object> handleOnlyTeacherCanBeAssignedToSubjectException(OnlyTeacherCanBeAssignedToSubjectException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "subject can only assigned to  teacher");
+	}
+	
+	@ExceptionHandler(AdminAlreadyFoundException.class)
+	public ResponseEntity<Object> handleAdminAlreadyFoundException(AdminAlreadyFoundException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "admin is already inserted");
 	}
 }

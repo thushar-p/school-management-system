@@ -1,8 +1,10 @@
 package com.school.sba.security;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.school.sba.entity.User;
@@ -22,7 +24,7 @@ public class CustomUserDetail implements UserDetails{
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return null;
+		return Collections.singleton(new SimpleGrantedAuthority(user.getUserRole().name()));
 	}
 
 	@Override

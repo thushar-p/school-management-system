@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 import com.school.sba.entity.User;
 import com.school.sba.enums.UserRole;
 import com.school.sba.exception.AcademicProgramNotFoundException;
+import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
-import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
@@ -45,9 +45,7 @@ public class UserServiceImpl implements UserService {
 	private ResponseStructure<UserResponse> structure;
 
 	
-	/*
-	 * map from UserRequest object to User object
-	 */
+
 	private User mapToUser(UserRequest userRequest) {
 		return User.builder().userName(userRequest.getUserName())
 				.userPassword(passwordEncoder.encode(userRequest.getUserPassword()))
@@ -61,9 +59,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 
-	/*
-	 * map from User object to UserResponse
-	 */
+
 	private UserResponse mapToUserResponse(User user) {
 
 		List<String> listOfProgramName = new ArrayList<>();
@@ -89,17 +85,13 @@ public class UserServiceImpl implements UserService {
 
 	
 	
-	/*
-	 * saveUser() -> the first user that should be saved is Admin 
-	 * -> Admin is responsible for the creation of student and teacher 
-	 * -> if the Admin is not present in the database we cannot create teacher or student
-	 */
 	@Override
-	public ResponseEntity<ResponseStructure<UserResponse>> saveUser(UserRequest userRequest) {
-
-		if (userRequest.getUserRole().equals(UserRole.ADMIN)) {
+	public ResponseEntity<ResponseStructure<UserResponse>> registerAdmin(UserRequest userRequest) {
+		
+		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
+			
 			if (userRepository.existsByIsDeletedAndUserRole(false , userRequest.getUserRole()))  {
-				throw new SchoolCannotBeCreatedException("Admin already exist");
+				throw new AdminAlreadyFoundException("Admin already exist");
 			} 
 			else {
 				if(userRepository.existsByIsDeletedAndUserRole(true, userRequest.getUserRole())) {
@@ -123,74 +115,92 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		else {
-
-			if(userRepository.existsByUserRole(UserRole.ADMIN)) {
-				User user = userRepository.save(mapToUser(userRequest));
-
-				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setMessage("user saved successfully");
-				structure.setData(mapToUserResponse(user));
-
-				return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
-			}
-			else {
-				throw new AdminNotFoundException("admin not found");
-			}
+			throw new AdminNotFoundException("admin not found");
 		}
-
+		
 	}
+	
+	
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> addOtherUser(UserRequest userRequest) {
+		
+		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
+			throw new AdminAlreadyFoundException("admin already found");
+		}
+		else {
+			User user = userRepository.save(mapToUser(userRequest));
 
+			structure.setStatus(HttpStatus.CREATED.value());
+			structure.setMessage("user saved successfully");
+			structure.setData(mapToUserResponse(user));
+
+			return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
+		}
+	}
+	
+	
+	
 	
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId) {
 
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
+		return userRepository.findById(userId)
+				.map(user -> {
+					structure.setStatus(HttpStatus.FOUND.value());
+					structure.setMessage("user found successfully");
+					structure.setData(mapToUserResponse(user));
 
-		structure.setStatus(HttpStatus.FOUND.value());
-		structure.setMessage("user found successfully");
-		structure.setData(mapToUserResponse(user));
-
-		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
-	}
-
-
-	@Override
-	public ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId) {
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
-
-		if(user.isDeleted()) {
-			throw new UserNotFoundByIdException("User already deleted");
-		}
-
-		user.setDeleted(true);
-		userRepository.save(user);
-
-		structure.setStatus(HttpStatus.OK.value());
-		structure.setMessage("user deleted successfully");
-		structure.setData(mapToUserResponse(user));
-
-		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
-	}
-
-	@Override
-	public ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest) {
-
-		User user = userRepository.findById(userId)
-				.map( u -> {
-					User mappedUser = mapToUser(userRequest);
-					mappedUser.setUserId(userId);
-					return userRepository.save(mappedUser);
+					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
-		structure.setStatus(HttpStatus.OK.value());
-		structure.setMessage("user updated successfully");
-		structure.setData(mapToUserResponse(user));
-
-		return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+		
 	}
+	
+	
+
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId) {
+		return userRepository.findById(userId)
+				.map(user -> {
+					if(user.isDeleted()) {
+						throw new UserNotFoundByIdException("User already deleted");
+					}
+
+					user.setDeleted(true);
+					userRepository.save(user);
+
+					structure.setStatus(HttpStatus.OK.value());
+					structure.setMessage("user deleted successfully");
+					structure.setData(mapToUserResponse(user));
+
+					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+				})
+				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
+		
+	}
+
+	
+	
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest) {
+
+		return userRepository.findById(userId)
+				.map( user -> {
+					User mappedUser = mapToUser(userRequest);
+					mappedUser.setUserId(userId);
+					user = userRepository.save(mappedUser);
+					
+					structure.setStatus(HttpStatus.OK.value());
+					structure.setMessage("user updated successfully");
+					structure.setData(mapToUserResponse(user));
+
+					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+				})
+				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
+	}
+	
+
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> assignToAcademicProgram(int programId, int userId) {
@@ -223,6 +233,7 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> assignSubjectToTeacher(int subjectId, int userId) {
