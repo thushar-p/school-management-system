@@ -26,6 +26,7 @@ import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
+import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 
@@ -114,5 +115,10 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(AdminAlreadyFoundException.class)
 	public ResponseEntity<Object> handleAdminAlreadyFoundException(AdminAlreadyFoundException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "admin is already inserted");
+	}
+	
+	@ExceptionHandler(SubjectCannotBeAssignedToStudentException.class)
+	public ResponseEntity<Object> handleSubjectCannotBeAssignedToStudentException(SubjectCannotBeAssignedToStudentException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "subject cannot be assigned to subject");
 	}
 }

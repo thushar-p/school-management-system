@@ -18,6 +18,7 @@ import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
+import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
@@ -34,10 +35,10 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	private SchoolRepository schoolRepository;
-	
+
 	@Autowired
 	private UserRepository userRepository;
 
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private ResponseStructure<UserResponse> structure;
 
-	
+
 
 	private User mapToUser(UserRequest userRequest) {
 		return User.builder().userName(userRequest.getUserName())
@@ -89,13 +90,13 @@ public class UserServiceImpl implements UserService {
 				.build();
 	}
 
-	
-	
+
+
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> registerAdmin(UserRequest userRequest) {
-		
+
 		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
-			
+
 			if (userRepository.existsByIsDeletedAndUserRole(false , userRequest.getUserRole()))  {
 				throw new AdminAlreadyFoundException("Admin already exist");
 			} 
@@ -123,41 +124,41 @@ public class UserServiceImpl implements UserService {
 		else {
 			throw new AdminNotFoundException("admin not found");
 		}
-		
+
 	}
-	
-	
+
+
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> addOtherUser(UserRequest userRequest) {
-		
+
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		
+
 		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
 			throw new AdminAlreadyFoundException("admin already found");
 		}
 		else {
 			return userRepository.findByUserName(username).map(admin -> {
 				School school = admin.getSchool();
-				
+
 				User user = userRepository.save(mapToUser(userRequest));
 				user.setSchool(school);
 				user = userRepository.save(user);
-				
-				
+
+
 				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setMessage( user.getUserRole().name() +" saved successfully");
+				structure.setMessage( user.getUserRole().name().toLowerCase() +" saved successfully");
 				structure.setData(mapToUserResponse(user));
 
 				return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
-				
+
 			})
-			.orElseThrow(() -> new AdminNotFoundException("admin not found"));		
+					.orElseThrow(() -> new AdminNotFoundException("admin not found"));		
 		}
 	}
-	
-	
-	
-	
+
+
+
+
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> findUser(Integer userId) {
 
@@ -171,10 +172,10 @@ public class UserServiceImpl implements UserService {
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
-		
+
 	}
-	
-	
+
+
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> deleteUser(int userId) {
@@ -194,11 +195,11 @@ public class UserServiceImpl implements UserService {
 					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
-		
+
 	}
 
-	
-	
+
+
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest) {
 
@@ -207,7 +208,7 @@ public class UserServiceImpl implements UserService {
 					User mappedUser = mapToUser(userRequest);
 					mappedUser.setUserId(userId);
 					user = userRepository.save(mappedUser);
-					
+
 					structure.setStatus(HttpStatus.OK.value());
 					structure.setMessage("user updated successfully");
 					structure.setData(mapToUserResponse(user));
@@ -216,7 +217,7 @@ public class UserServiceImpl implements UserService {
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 	}
-	
+
 
 
 	@Override
@@ -230,17 +231,32 @@ public class UserServiceImpl implements UserService {
 					else {
 						return academicProgramRepository.findById(programId)
 								.map(academicProgram -> {
-									academicProgram.getListOfUsers().add(user);
-									user.getListOfAcademicPrograms().add(academicProgram);
 
-									userRepository.save(user);
-									academicProgramRepository.save(academicProgram);
+									if(academicProgram.getListOfSubject().contains(user.getSubject())) {
 
-									structure.setStatus(HttpStatus.OK.value());
-									structure.setMessage("assigned to academic program successfully");
-									structure.setData(mapToUserResponse(user));
+										if(user.getUserRole().equals(UserRole.TEACHER)) {
 
-									return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+											academicProgram.getListOfUsers().add(user);		
+											user.getListOfAcademicPrograms().add(academicProgram);
+
+											userRepository.save(user);
+											academicProgramRepository.save(academicProgram);
+
+											structure.setStatus(HttpStatus.OK.value());
+											structure.setMessage("assigned to academic program successfully");
+											structure.setData(mapToUserResponse(user));
+
+											return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+
+										}
+										else {
+											throw new SubjectCannotBeAssignedToStudentException("subject cannot be assigned to subject");
+										}
+									}
+									else {
+										throw new SubjectNotFoundException("subject not found");
+									}
+
 
 								})
 								.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
@@ -249,8 +265,9 @@ public class UserServiceImpl implements UserService {
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
 	}
-
 	
+
+
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> assignSubjectToTeacher(int subjectId, int userId) {
