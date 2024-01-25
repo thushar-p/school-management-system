@@ -6,9 +6,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.school.sba.entity.School;
 import com.school.sba.entity.User;
 import com.school.sba.enums.UserRole;
 import com.school.sba.exception.AcademicProgramNotFoundException;
@@ -19,6 +21,7 @@ import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
+import com.school.sba.repository.SchoolRepository;
 import com.school.sba.repository.SubjectRepository;
 import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.UserRequest;
@@ -31,6 +34,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private SchoolRepository schoolRepository;
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -124,17 +130,28 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> addOtherUser(UserRequest userRequest) {
 		
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		
 		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
 			throw new AdminAlreadyFoundException("admin already found");
 		}
 		else {
-			User user = userRepository.save(mapToUser(userRequest));
+			return userRepository.findByUserName(username).map(admin -> {
+				School school = admin.getSchool();
+				
+				User user = userRepository.save(mapToUser(userRequest));
+				user.setSchool(school);
+				user = userRepository.save(user);
+				
+				
+				structure.setStatus(HttpStatus.CREATED.value());
+				structure.setMessage( user.getUserRole().name() +" saved successfully");
+				structure.setData(mapToUserResponse(user));
 
-			structure.setStatus(HttpStatus.CREATED.value());
-			structure.setMessage("user saved successfully");
-			structure.setData(mapToUserResponse(user));
-
-			return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
+				return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
+				
+			})
+			.orElseThrow(() -> new AdminNotFoundException("admin not found"));		
 		}
 	}
 	
@@ -220,7 +237,7 @@ public class UserServiceImpl implements UserService {
 									academicProgramRepository.save(academicProgram);
 
 									structure.setStatus(HttpStatus.OK.value());
-									structure.setMessage("user updated successfully");
+									structure.setMessage("assigned to academic program successfully");
 									structure.setData(mapToUserResponse(user));
 
 									return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
