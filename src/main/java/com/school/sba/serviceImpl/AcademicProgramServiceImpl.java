@@ -20,6 +20,7 @@ import com.school.sba.repository.SchoolRepository;
 import com.school.sba.requestdto.AcademicProgramRequest;
 import com.school.sba.responsedto.AcademicProgramResponse;
 import com.school.sba.service.AcademicProgramService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 
@@ -31,12 +32,6 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 
 	@Autowired
 	private SchoolRepository schoolRepository;
-
-	@Autowired
-	private ResponseStructure<AcademicProgramResponse> structure;
-
-	@Autowired
-	private ResponseStructure<List<AcademicProgramResponse>> listStructure;
 
 	public AcademicProgramResponse mapToAcademicProgramResponse(AcademicProgram academicProgram) {
 
@@ -87,12 +82,11 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 					academicProgram.setSchool(school);
 
 					academicProgram = academicProgramRepository.save(academicProgram);
+					
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+							"Academic program created successfully",
+							mapToAcademicProgramResponse(academicProgram));
 
-					structure.setStatus(HttpStatus.CREATED.value());
-					structure.setMessage("Academic program created successfully");
-					structure.setData(mapToAcademicProgramResponse(academicProgram));
-
-					return new ResponseEntity<ResponseStructure<AcademicProgramResponse>>(structure, HttpStatus.CREATED);
 				})
 				.orElseThrow(() -> new SchoolNotFoundByIdException("school not found"));
 
@@ -110,18 +104,16 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 							.collect(Collectors.toList());
 
 					if(listOfAcadmicProgram.isEmpty()) {
-						listStructure.setStatus(HttpStatus.NO_CONTENT.value());
-						listStructure.setMessage("no programs has been found");
-						listStructure.setData(listOfAcademicProgramResponse);
-
-						return new ResponseEntity<ResponseStructure<List<AcademicProgramResponse>>>(listStructure, HttpStatus.NO_CONTENT);
+						
+						return ResponseEntityProxy.setResponseStructure(HttpStatus.NO_CONTENT,
+								"no programs found",
+								listOfAcademicProgramResponse);
 					}
 					else {
-						listStructure.setStatus(HttpStatus.FOUND.value());
-						listStructure.setMessage("found list of academic programs");
-						listStructure.setData(listOfAcademicProgramResponse);
-
-						return new ResponseEntity<ResponseStructure<List<AcademicProgramResponse>>>(listStructure, HttpStatus.FOUND);
+						
+						return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+								"found list of academic programs",
+								listOfAcademicProgramResponse);
 					}
 				})
 				.orElseThrow(() -> new SchoolNotFoundByIdException("school not found"));

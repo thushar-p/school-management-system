@@ -20,6 +20,7 @@ import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.SchoolRequest;
 import com.school.sba.responsedto.SchoolResponse;
 import com.school.sba.service.SchoolService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 
@@ -31,9 +32,6 @@ public class SchoolServiceImpl implements SchoolService{
 
 	@Autowired
 	private UserRepository userRepo;
-
-	@Autowired
-	private ResponseStructure<SchoolResponse> responseStructure;
 
 
 	private School mapToSchool(SchoolRequest schoolRequest) {
@@ -81,11 +79,9 @@ public class SchoolServiceImpl implements SchoolService{
 								userRepo.save(user);
 							});
 
-							responseStructure.setStatus(HttpStatus.CREATED.value());
-							responseStructure.setMessage("School inserted successfully");
-							responseStructure.setData(mapToUserResponse(school));
-
-							return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.CREATED);
+							return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+									"School inserted successfully",
+									mapToUserResponse(school));
 						}
 						else {
 							throw new SchoolCannotBeCreatedException("school is already present");
@@ -116,11 +112,9 @@ public class SchoolServiceImpl implements SchoolService{
 					school.setSchoolId(schoolId);
 					school = schoolRepo.save(school);
 					
-					responseStructure.setStatus(HttpStatus.OK.value());
-					responseStructure.setMessage("School data updated successfully in database");
-					responseStructure.setData(mapToUserResponse(school));
-
-					return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+							"School updated successfully",
+							mapToUserResponse(school));					
 				})
 				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be updated due to absence of technical problems"));
 

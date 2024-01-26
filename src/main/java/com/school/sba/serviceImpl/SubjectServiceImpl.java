@@ -16,6 +16,7 @@ import com.school.sba.requestdto.SubjectRequest;
 import com.school.sba.responsedto.AcademicProgramResponse;
 import com.school.sba.responsedto.SubjectResponse;
 import com.school.sba.service.SubjectService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 @Service
@@ -26,12 +27,6 @@ public class SubjectServiceImpl implements SubjectService{
 
 	@Autowired
 	private AcademicProgramRepository academicProgramRepository;
-
-	@Autowired
-	private ResponseStructure<AcademicProgramResponse> structure;
-
-	@Autowired
-	private ResponseStructure<List<SubjectResponse>> listStructure;
 
 	@Autowired
 	private AcademicProgramServiceImpl academicProgramServiceImpl;
@@ -86,13 +81,10 @@ public class SubjectServiceImpl implements SubjectService{
 					academicProgram.setListOfSubject(listOfSubjects);
 
 					academicProgramRepository.save(academicProgram);
-
-					structure.setStatus(HttpStatus.CREATED.value());
-					structure.setMessage("subjects have been updated successfully");
-					structure.setData(academicProgramServiceImpl.mapToAcademicProgramResponse(academicProgram));
-
-					return new ResponseEntity<ResponseStructure<AcademicProgramResponse>>(structure, HttpStatus.CREATED);
-
+					
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+							"subjects have been updated successfully",
+							academicProgramServiceImpl.mapToAcademicProgramResponse(academicProgram));
 				})
 				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 
@@ -103,18 +95,16 @@ public class SubjectServiceImpl implements SubjectService{
 		List<Subject> listOfSubjects = subjectRepository.findAll();
 
 		if(listOfSubjects.isEmpty()) {
-			listStructure.setStatus(HttpStatus.NOT_FOUND.value());
-			listStructure.setMessage("No subjects found");
-			listStructure.setData(mapTOListOfSubjectResponse(listOfSubjects));
-
-			return new ResponseEntity<ResponseStructure<List<SubjectResponse>>>(listStructure, HttpStatus.NOT_FOUND);
+			
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.NOT_FOUND,
+					"No subjects found",
+					mapTOListOfSubjectResponse(listOfSubjects));
 		}
 		else {
-			listStructure.setStatus(HttpStatus.FOUND.value());
-			listStructure.setMessage("list of subjects found");
-			listStructure.setData(mapTOListOfSubjectResponse(listOfSubjects));
-
-			return new ResponseEntity<ResponseStructure<List<SubjectResponse>>>(listStructure, HttpStatus.FOUND);
+			
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+					"subjects found",
+					mapTOListOfSubjectResponse(listOfSubjects));
 		}
 
 	}

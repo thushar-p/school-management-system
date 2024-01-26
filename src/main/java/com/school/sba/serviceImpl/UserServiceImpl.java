@@ -29,6 +29,7 @@ import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.UserRequest;
 import com.school.sba.responsedto.UserResponse;
 import com.school.sba.service.UserService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 @Service
@@ -45,10 +46,6 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private SubjectRepository subjectRepository;
-
-	@Autowired
-	private ResponseStructure<UserResponse> structure;
-
 
 
 	private User mapToUser(UserRequest userRequest) {
@@ -92,7 +89,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> registerAdmin(UserRequest userRequest) {
-		
+
 		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
 		if(!EnumSet.allOf(UserRole.class).contains(userRole))
 			throw new InvalidUserRoleException("invalid user role");
@@ -106,20 +103,16 @@ public class UserServiceImpl implements UserService {
 				if(userRepository.existsByIsDeletedAndUserRole(true, userRole)) {
 					User user = userRepository.save(mapToUser(userRequest));
 
-					structure.setStatus(HttpStatus.CREATED.value());
-					structure.setMessage("user saved successfully");
-					structure.setData(mapToUserResponse(user));
-
-					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+							"admin saved successfully",
+							mapToUserResponse(user));
 				}
 				else {
 					User user = userRepository.save(mapToUser(userRequest));
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+							"admin saved successfully",
+							mapToUserResponse(user));
 
-					structure.setStatus(HttpStatus.CREATED.value());
-					structure.setMessage("user saved successfully");
-					structure.setData(mapToUserResponse(user));
-
-					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);	
 				}
 			}
 		}
@@ -134,7 +127,7 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<ResponseStructure<UserResponse>> addOtherUser(UserRequest userRequest) {
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		
+
 		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
 		if(!EnumSet.allOf(UserRole.class).contains(userRole))
 			throw new InvalidUserRoleException("invalid user role");
@@ -150,12 +143,9 @@ public class UserServiceImpl implements UserService {
 				user.setSchool(school);
 				user = userRepository.save(user);
 
-
-				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setMessage( user.getUserRole().name().toLowerCase() +" saved successfully");
-				structure.setData(mapToUserResponse(user));
-
-				return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.CREATED);
+				return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+						user.getUserRole().name().toLowerCase() +" saved successfully",
+						mapToUserResponse(user));
 
 			})
 					.orElseThrow(() -> new AdminNotFoundException("admin not found"));		
@@ -170,11 +160,10 @@ public class UserServiceImpl implements UserService {
 
 		return userRepository.findById(userId)
 				.map(user -> {
-					structure.setStatus(HttpStatus.FOUND.value());
-					structure.setMessage("user found successfully");
-					structure.setData(mapToUserResponse(user));
-
-					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.FOUND);
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+							"user found successfully",
+							mapToUserResponse(user));
+					
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
@@ -193,12 +182,10 @@ public class UserServiceImpl implements UserService {
 
 					user.setDeleted(true);
 					userRepository.save(user);
-
-					structure.setStatus(HttpStatus.OK.value());
-					structure.setMessage("user deleted successfully");
-					structure.setData(mapToUserResponse(user));
-
-					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+					
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+							"user deleted successfully",
+							mapToUserResponse(user));
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
@@ -208,7 +195,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest) {
-		
+
 		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
 		if(!EnumSet.allOf(UserRole.class).contains(userRole))
 			throw new InvalidUserRoleException("invalid user role");
@@ -218,12 +205,10 @@ public class UserServiceImpl implements UserService {
 					User mappedUser = mapToUser(userRequest);
 					mappedUser.setUserId(userId);
 					user = userRepository.save(mappedUser);
-
-					structure.setStatus(HttpStatus.OK.value());
-					structure.setMessage("user updated successfully");
-					structure.setData(mapToUserResponse(user));
-
-					return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+					
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+							"user updated successfully",
+							mapToUserResponse(user));
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 	}
@@ -243,7 +228,7 @@ public class UserServiceImpl implements UserService {
 								.map(academicProgram -> {
 
 									if(user.getUserRole().equals(UserRole.TEACHER)) {
-										
+
 										if(academicProgram.getListOfSubject().contains(user.getSubject())) {
 
 											academicProgram.getListOfUsers().add(user);		
@@ -251,12 +236,10 @@ public class UserServiceImpl implements UserService {
 
 											userRepository.save(user);
 											academicProgramRepository.save(academicProgram);
-
-											structure.setStatus(HttpStatus.OK.value());
-											structure.setMessage("assigned to academic program successfully");
-											structure.setData(mapToUserResponse(user));
-
-											return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
+											
+											return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+													"assigned to academic program successfully",
+													mapToUserResponse(user));
 
 										}
 										else {
@@ -287,12 +270,11 @@ public class UserServiceImpl implements UserService {
 								.map(subject -> {
 									user.setSubject(subject);
 									userRepository.save(user);
+									
+									return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+											"subject assigned to teacher successfully",
+											mapToUserResponse(user));
 
-									structure.setStatus(HttpStatus.OK.value());
-									structure.setMessage("subject assigned to teacher successfully");
-									structure.setData(mapToUserResponse(user));
-
-									return new ResponseEntity<ResponseStructure<UserResponse>>(structure, HttpStatus.OK);
 								})
 								.orElseThrow(() -> new SubjectNotFoundException("subject not found"));
 					}

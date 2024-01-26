@@ -21,6 +21,7 @@ import com.school.sba.repository.AcademicProgramRepository;
 import com.school.sba.repository.ClassHourRepository;
 import com.school.sba.responsedto.ClassHourResponse;
 import com.school.sba.service.ClassHourService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 @Service
@@ -28,9 +29,6 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 	@Autowired
 	private ClassHourRepository classHourRepository;
-
-	@Autowired
-	private ResponseStructure<List<ClassHourResponse>> listStructure;
 
 	@Autowired
 	private AcademicProgramRepository academicProgramRepository;
@@ -155,7 +153,8 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> addClassHour(int programId) {
-		return academicProgramRepository.findById(programId).map(academicProgram -> {
+		return academicProgramRepository.findById(programId)
+				.map(academicProgram -> {
 
 			List<ClassHour> listOfClassHours = generateClassHour(academicProgram);
 
@@ -164,12 +163,11 @@ public class ClassHourServiceImpl implements ClassHourService {
 			});
 
 			List<ClassHour> savedList = classHourRepository.saveAll(listOfClassHours);
-
-			listStructure.setStatus(HttpStatus.CREATED.value());
-			listStructure.setMessage("class hour generated successfully!!!");
-			listStructure.setData(mapToClassHourResponse(savedList));
-
-			return new ResponseEntity<ResponseStructure<List<ClassHourResponse>>>(listStructure, HttpStatus.CREATED);
+			
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+					"class hour generated successfully",
+					mapToClassHourResponse(savedList));
+			
 		}).orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 	}
 
