@@ -19,6 +19,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Subject {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int subjectId;

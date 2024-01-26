@@ -31,7 +31,6 @@ public class School {
 	private String schoolEmailId;
 	private String schoolAddress;
 	
-	
 	@OneToOne
 	private Schedule schedule;
 	

@@ -22,7 +22,6 @@ import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
-import com.school.sba.repository.SchoolRepository;
 import com.school.sba.repository.SubjectRepository;
 import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.UserRequest;
@@ -35,9 +34,6 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-
-	@Autowired
-	private SchoolRepository schoolRepository;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -232,9 +228,9 @@ public class UserServiceImpl implements UserService {
 						return academicProgramRepository.findById(programId)
 								.map(academicProgram -> {
 
-									if(academicProgram.getListOfSubject().contains(user.getSubject())) {
-
-										if(user.getUserRole().equals(UserRole.TEACHER)) {
+									if(user.getUserRole().equals(UserRole.TEACHER)) {
+										
+										if(academicProgram.getListOfSubject().contains(user.getSubject())) {
 
 											academicProgram.getListOfUsers().add(user);		
 											user.getListOfAcademicPrograms().add(academicProgram);
@@ -250,14 +246,13 @@ public class UserServiceImpl implements UserService {
 
 										}
 										else {
-											throw new SubjectCannotBeAssignedToStudentException("subject cannot be assigned to subject");
+											throw new SubjectNotFoundException("subject not found");
 										}
 									}
 									else {
-										throw new SubjectNotFoundException("subject not found");
+										throw new SubjectCannotBeAssignedToStudentException("subject cannot be assigned to subject");
+
 									}
-
-
 								})
 								.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 					}
@@ -265,7 +260,7 @@ public class UserServiceImpl implements UserService {
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
 	}
-	
+
 
 
 

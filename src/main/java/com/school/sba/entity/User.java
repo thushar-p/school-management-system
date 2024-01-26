@@ -2,12 +2,17 @@ package com.school.sba.entity;
 
 import java.util.List;
 
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+
 import com.school.sba.enums.UserRole;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
@@ -42,14 +47,17 @@ public class User {
 	
 	private boolean isDeleted;
 	
+	@Enumerated(EnumType.STRING)
 	private UserRole userRole;
 	
 	@ManyToOne
+	@JoinColumn(name = "schoolId")
 	private School school;
 	
 	@ManyToMany(mappedBy = "listOfUsers")
 	private List<AcademicProgram> listOfAcademicPrograms;
 	
 	@ManyToOne
+	@JoinColumn(name = "subjectId")
 	private Subject subject;
 }
