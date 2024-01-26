@@ -2,8 +2,6 @@ package com.school.sba.entity;
 
 import java.util.List;
 
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-
 import com.school.sba.enums.UserRole;
 
 import jakarta.persistence.Entity;

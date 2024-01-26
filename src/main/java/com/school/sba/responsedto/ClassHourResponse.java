@@ -1,5 +1,7 @@
 package com.school.sba.responsedto;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import com.school.sba.enums.ClassStatus;
@@ -17,9 +19,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ClassHourResponse {
 
-	private int classHourId;
 	private LocalTime classBeginsAt;
 	private LocalTime classEndsAt;
+	private DayOfWeek day;
+	private LocalDate date;
 	private int classRoomNumber;
 	private ClassStatus classStatus;
 	

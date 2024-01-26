@@ -1,6 +1,6 @@
 package com.school.sba.entity;
 
-import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.school.sba.enums.ProgramType;
@@ -37,8 +37,8 @@ public class AcademicProgram {
 	private ProgramType programType;
 	
 	private String programName;
-	private LocalTime programBeginsAt;
-	private LocalTime programEndsAt;
+	private LocalDate programBeginsAt;
+	private LocalDate programEndsAt;
 	
 	@ManyToOne
 	@JoinColumn(name = "schoolId")

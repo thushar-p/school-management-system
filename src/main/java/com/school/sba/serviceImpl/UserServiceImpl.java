@@ -1,6 +1,7 @@
 package com.school.sba.serviceimpl;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
+import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
 import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
 import com.school.sba.exception.SubjectNotFoundException;
@@ -56,7 +58,7 @@ public class UserServiceImpl implements UserService {
 				.userLastName(userRequest.getUserLastName())
 				.userEmail(userRequest.getUserEmail())
 				.userContact(userRequest.getUserContact())
-				.userRole(userRequest.getUserRole())
+				.userRole(UserRole.valueOf(userRequest.getUserRole().toUpperCase()))
 				.school(userRequest.getSchool())
 				.build();
 	}
@@ -90,14 +92,18 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> registerAdmin(UserRequest userRequest) {
+		
+		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
+		if(!EnumSet.allOf(UserRole.class).contains(userRole))
+			throw new InvalidUserRoleException("invalid user role");
 
-		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
+		if(userRole.equals(UserRole.ADMIN)) {
 
-			if (userRepository.existsByIsDeletedAndUserRole(false , userRequest.getUserRole()))  {
+			if (userRepository.existsByIsDeletedAndUserRole(false , userRole))  {
 				throw new AdminAlreadyFoundException("Admin already exist");
 			} 
 			else {
-				if(userRepository.existsByIsDeletedAndUserRole(true, userRequest.getUserRole())) {
+				if(userRepository.existsByIsDeletedAndUserRole(true, userRole)) {
 					User user = userRepository.save(mapToUser(userRequest));
 
 					structure.setStatus(HttpStatus.CREATED.value());
@@ -128,8 +134,12 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<ResponseStructure<UserResponse>> addOtherUser(UserRequest userRequest) {
 
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		
+		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
+		if(!EnumSet.allOf(UserRole.class).contains(userRole))
+			throw new InvalidUserRoleException("invalid user role");
 
-		if(userRequest.getUserRole().equals(UserRole.ADMIN)) {
+		if(userRole.equals(UserRole.ADMIN)) {
 			throw new AdminAlreadyFoundException("admin already found");
 		}
 		else {
@@ -198,6 +208,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> updateUser(int userId, UserRequest userRequest) {
+		
+		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
+		if(!EnumSet.allOf(UserRole.class).contains(userRole))
+			throw new InvalidUserRoleException("invalid user role");
 
 		return userRepository.findById(userId)
 				.map( user -> {

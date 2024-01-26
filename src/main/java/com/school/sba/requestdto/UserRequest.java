@@ -1,7 +1,6 @@
 package com.school.sba.requestdto;
 
 import com.school.sba.entity.School;
-import com.school.sba.enums.UserRole;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -40,6 +39,6 @@ public class UserRequest {
 	
 	private School school;
 	
-	private UserRole userRole;
+	private String userRole;
 
 }

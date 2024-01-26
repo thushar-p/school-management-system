@@ -20,6 +20,9 @@ import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
+import com.school.sba.exception.InvalidProgramTypeException;
+import com.school.sba.exception.InvalidUserRoleException;
+import com.school.sba.exception.InvalidWeekDayException;
 import com.school.sba.exception.OnlyAdminCanCreateSchoolException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
@@ -120,5 +123,20 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(SubjectCannotBeAssignedToStudentException.class)
 	public ResponseEntity<Object> handleSubjectCannotBeAssignedToStudentException(SubjectCannotBeAssignedToStudentException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "subject cannot be assigned to subject");
+	}
+	
+	@ExceptionHandler(InvalidWeekDayException.class)
+	public ResponseEntity<Object> handleInvalidWeekDayException(InvalidWeekDayException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "week entered is invalid");
+	}
+	
+	@ExceptionHandler(InvalidProgramTypeException.class)
+	public ResponseEntity<Object> handleInvalidProgramTypeException(InvalidProgramTypeException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "program type entered is invalid");
+	}
+	
+	@ExceptionHandler(InvalidUserRoleException.class)
+	public ResponseEntity<Object> handleInvalidUserRoleException(InvalidUserRoleException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "user role entered is invalid");
 	}
 }

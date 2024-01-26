@@ -1,6 +1,7 @@
 package com.school.sba.serviceimpl;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.AcademicProgram;
 import com.school.sba.entity.Subject;
+import com.school.sba.enums.ProgramType;
+import com.school.sba.exception.InvalidProgramTypeException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
 import com.school.sba.repository.SchoolRepository;
@@ -59,7 +62,7 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 
 	private AcademicProgram mapToAcademicProgram(AcademicProgramRequest academicProgramRequest) {
 		return AcademicProgram.builder()
-				.programType(academicProgramRequest.getProgramType())
+				.programType(ProgramType.valueOf(academicProgramRequest.getProgramType().toUpperCase()))
 				.programName(academicProgramRequest.getProgramName())
 				.programBeginsAt(academicProgramRequest.getProgramBeginsAt())
 				.programEndsAt(academicProgramRequest.getProgramEndsAt())
@@ -70,6 +73,10 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> createProgram(int schoolId,
 			AcademicProgramRequest academicProgramRequest) {
 
+		ProgramType programType = ProgramType.valueOf(academicProgramRequest.getProgramType().toUpperCase());
+		if(!EnumSet.allOf(ProgramType.class).contains(programType))
+			throw new InvalidProgramTypeException("invalid program type");
+		
 		return schoolRepository.findById(schoolId)
 				.map(school -> {
 					AcademicProgram academicProgram = academicProgramRepository.save(mapToAcademicProgram(academicProgramRequest));
