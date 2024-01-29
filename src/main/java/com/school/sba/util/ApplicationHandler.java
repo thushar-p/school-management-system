@@ -20,6 +20,8 @@ import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
+import com.school.sba.exception.ClassHourNotFoundException;
+import com.school.sba.exception.IdNotFoundException;
 import com.school.sba.exception.InvalidProgramTypeException;
 import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.InvalidWeekDayException;
@@ -30,7 +32,9 @@ import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
 import com.school.sba.exception.SchoolNotFoundByIdException;
 import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
+import com.school.sba.exception.SubjectNotAssignedToTeacherException;
 import com.school.sba.exception.SubjectNotFoundException;
+import com.school.sba.exception.TeacherNotFoundByIdException;
 import com.school.sba.exception.UserNotFoundByIdException;
 
 @RestControllerAdvice
@@ -138,5 +142,25 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(InvalidUserRoleException.class)
 	public ResponseEntity<Object> handleInvalidUserRoleException(InvalidUserRoleException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "user role entered is invalid");
+	}
+	
+	@ExceptionHandler(TeacherNotFoundByIdException.class)
+	public ResponseEntity<Object> handleTeacherNotFoundByIdException(TeacherNotFoundByIdException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "teacher not found with the given id");
+	}
+	
+	@ExceptionHandler(IdNotFoundException.class)
+	public ResponseEntity<Object> handleIdNotFoundException(IdNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "specified id is not found");
+	}
+	
+	@ExceptionHandler(ClassHourNotFoundException.class)
+	public ResponseEntity<Object> handleClassHourNotFoundException(ClassHourNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "class hour not foundn with the given id");
+	}
+	
+	@ExceptionHandler(SubjectNotAssignedToTeacherException.class)
+	public ResponseEntity<Object> handleSubjectNotAssignedToTeacherException(SubjectNotAssignedToTeacherException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "subject not assigned to teacher, try assigning the subject to teacher");
 	}
 }
