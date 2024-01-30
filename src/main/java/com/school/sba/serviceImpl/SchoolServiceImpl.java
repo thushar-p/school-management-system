@@ -12,8 +12,9 @@ import org.springframework.stereotype.Service;
 import com.school.sba.entity.School;
 import com.school.sba.enums.UserRole;
 import com.school.sba.exception.InvalidWeekDayException;
+import com.school.sba.exception.SchoolAlreadyPresentException;
 import com.school.sba.exception.SchoolCannotBeCreatedException;
-import com.school.sba.exception.SchoolNotFoundByIdException;
+import com.school.sba.exception.SchoolNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.SchoolRepository;
 import com.school.sba.repository.UserRepository;
@@ -58,6 +59,9 @@ public class SchoolServiceImpl implements SchoolService{
 	@Override
 	public ResponseEntity<ResponseStructure<SchoolResponse>> createSchool(SchoolRequest schoolRequest){
 
+		if(!schoolRepo.findAll().isEmpty())
+			throw new SchoolAlreadyPresentException("school already exist");
+		
 		String username = SecurityContextHolder.getContext()
 				.getAuthentication()
 				.getName();
@@ -98,62 +102,39 @@ public class SchoolServiceImpl implements SchoolService{
 
 
 	@Override
-	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
-			throws SchoolNotFoundByIdException {
-
-		return schoolRepo.findById(schoolId)
-				.map( school -> {
-					
-					DayOfWeek weekOffDay = DayOfWeek.valueOf(schoolRequest.getWeekOffDay().toUpperCase());
-					if(!EnumSet.allOf(DayOfWeek.class).contains(weekOffDay))
-						throw new InvalidWeekDayException("invalid week day");
-					
-					school = mapToSchool(schoolRequest);
-					school.setSchoolId(schoolId);
-					school = schoolRepo.save(school);
-					
-					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
-							"School updated successfully",
-							mapToUserResponse(school));					
-				})
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be updated due to absence of technical problems"));
-
+	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(SchoolRequest schoolRequest){
+		
+		School school = schoolRepo.findAll().get(0);
+		
+		if(school == null)
+			throw new SchoolNotFoundException("school not found");
+		
+		DayOfWeek weekOffDay = DayOfWeek.valueOf(schoolRequest.getWeekOffDay().toUpperCase());
+		if(!EnumSet.allOf(DayOfWeek.class).contains(weekOffDay))
+			throw new InvalidWeekDayException("invalid week day");
+		
+		school = mapToSchool(schoolRequest);
+		school.setSchoolId(school.getSchoolId());
+		school = schoolRepo.save(school);
+		
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+				"School updated successfully",
+				mapToUserResponse(school));
+		
 	}
-	
-	/*
+
 
 	@Override
-	public ResponseEntity<ResponseStructure<SchoolResponse>> deleteSchool(Integer schoolId) {
+	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(){
 
-		School existingSchool = schoolRepo.findById(schoolId)
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be deleted due to absence of school id"));
-
-		schoolRepo.deleteById(schoolId);
-
-		responseStructure.setStatus(HttpStatus.OK.value());
-		responseStructure.setMessage("School data deleted successfully from database");
-		responseStructure.setData(mapToUserResponse(existingSchool));
-
-		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.OK);
+		School school = schoolRepo.findAll().get(0);
+		
+		if(school == null)
+			throw new SchoolNotFoundException("school not found");
+		
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+				"school found successfully",
+				mapToUserResponse(school));
 	}
-
-	@Override
-	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(Integer schoolId)
-			throws SchoolNotFoundByIdException {
-
-		School fetchedSchool = schoolRepo.findById(schoolId)
-				.orElseThrow(() -> new SchoolNotFoundByIdException("School object cannot be fetched because it is not present in DB"));
-
-
-		responseStructure.setStatus(HttpStatus.FOUND.value());
-		responseStructure.setMessage("School data found in database");
-		responseStructure.setData(mapToUserResponse(fetchedSchool));
-
-		return new ResponseEntity<ResponseStructure<SchoolResponse>>(responseStructure, HttpStatus.FOUND);
-
-	}
-	
-	*/
-
 
 }

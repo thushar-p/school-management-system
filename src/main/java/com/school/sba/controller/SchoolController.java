@@ -3,7 +3,7 @@ package com.school.sba.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,23 +28,15 @@ public class SchoolController {
 	
 	@PreAuthorize("hasAuthority('ADMIN')")
 	@PutMapping("/schools/{schoolId}")
-	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(@PathVariable Integer schoolId, @RequestBody SchoolRequest schoolRequest){
-		return schoolService.updateSchool(schoolId, schoolRequest);
+	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(@RequestBody SchoolRequest schoolRequest){
+		return schoolService.updateSchool(schoolRequest);
 	}
 	
-	
-/*
-	
-	@DeleteMapping("/schools/{schoolId}")
-	public ResponseEntity<ResponseStructure<SchoolResponse>> deleteSchool(@PathVariable Integer schoolId){
-		return schoolService.deleteSchool(schoolId);
-	}
-	
-	@GetMapping("/schools/{schoolId}")
-	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(@PathVariable Integer schoolId){
-		return schoolService.findSchool(schoolId);
+	@GetMapping("/schools")
+	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(){
+		return schoolService.findSchool();
 	}
 
-*/
+
 	
 }

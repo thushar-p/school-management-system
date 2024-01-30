@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-	private UserResponse mapToUserResponse(User user) {
+	public UserResponse mapToUserResponse(User user) {
 
 		List<String> listOfProgramName = new ArrayList<>();
 

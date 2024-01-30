@@ -10,6 +10,11 @@ import com.school.sba.entity.ClassHour;
 @Repository
 public interface ClassHourRepository extends JpaRepository<ClassHour, Integer> {
 
+//	boolean existsByClassBeginsAtBetweenClassRoomNumber(LocalDateTime classBeginsAt,
+//			LocalDateTime classEndsAt, int classRoomNumber);
+
 	boolean existsByClassBeginsAtAndClassRoomNumber(LocalDateTime classBeginsAt, int classRoomNumber);
+
+
 
 }

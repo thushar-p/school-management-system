@@ -11,7 +11,7 @@ import com.school.sba.entity.Schedule;
 import com.school.sba.entity.School;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
-import com.school.sba.exception.SchoolNotFoundByIdException;
+import com.school.sba.exception.SchoolNotFoundException;
 import com.school.sba.repository.ScheduleRepository;
 import com.school.sba.repository.SchoolRepository;
 import com.school.sba.requestdto.ScheduleRequest;
@@ -84,7 +84,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 						throw new ScheduleAlreadyPresentException("Schedule is already added");
 					}
 				})
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school not found"));
+				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
 
 	}
 
@@ -92,7 +92,7 @@ public class ScheduleServiceImpl implements ScheduleService{
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> findSchedule(int schoolId) {
 
 		School school = schoolRepository.findById(schoolId)
-				.orElseThrow(() -> new SchoolNotFoundByIdException("School not found"));
+				.orElseThrow(() -> new SchoolNotFoundException("School not found"));
 
 		return scheduleRepository.findById(school.getSchedule().getScheduleId())
 				.map(schedule -> {
