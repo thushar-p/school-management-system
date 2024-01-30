@@ -45,11 +45,9 @@ public class AcademicProgram {
 	private School school;
 	
 	@ManyToMany
-//	@JoinColumn(name = "subjectId")
 	private List<Subject> listOfSubject;
 	
 	@ManyToMany
-//	@JoinColumn(name = "userId")
 	private List<User> listOfUsers;
 	
 	@OneToMany(mappedBy = "academicPrograms")

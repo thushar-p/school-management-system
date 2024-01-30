@@ -12,18 +12,13 @@ import org.springframework.stereotype.Service;
 
 import com.school.sba.entity.AcademicProgram;
 import com.school.sba.entity.Subject;
-import com.school.sba.entity.User;
 import com.school.sba.enums.ProgramType;
-import com.school.sba.enums.UserRole;
-import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.InvalidProgramTypeException;
-import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.SchoolNotFoundException;
 import com.school.sba.repository.AcademicProgramRepository;
 import com.school.sba.repository.SchoolRepository;
 import com.school.sba.requestdto.AcademicProgramRequest;
 import com.school.sba.responsedto.AcademicProgramResponse;
-import com.school.sba.responsedto.UserResponse;
 import com.school.sba.service.AcademicProgramService;
 import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
@@ -34,9 +29,6 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 
 	@Autowired
 	private AcademicProgramRepository academicProgramRepository;
-
-	@Autowired
-	private UserServiceImpl userServiceImpl;
 
 	@Autowired
 	private SchoolRepository schoolRepository;
@@ -127,42 +119,5 @@ public class AcademicProgramServiceImpl implements AcademicProgramService{
 				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
 	}
 
-	/*
-	@Override
-	public ResponseEntity<ResponseStructure<List<UserResponse>>> findAllRequiredType(int programId, String userRole) {
-		return academicProgramRepository.findById(programId)
-				.map(academicProgram -> {
-					
-					UserRole user = UserRole.valueOf(userRole.toUpperCase());
-					if(EnumSet.allOf(UserRole.class).contains(user)) {
-						
-						List<User> listOfUser = academicProgramRepository.findAllByUserRole(user);
-						userServiceImpl.mapToUserResponse(null);
-
-						List<UserResponse> listOfUserResponses = new ArrayList<>();
-
-						for(int i=0;i<listOfUser.size();i++) {
-							listOfUserResponses.add(userServiceImpl.mapToUserResponse(listOfUser.get(i)));
-						}
-
-						if(listOfUser.isEmpty()) {
-							return ResponseEntityProxy.setResponseStructure(HttpStatus.NOT_FOUND,
-									"no list of "+user+" is found",
-									listOfUserResponses);
-						}
-						else {
-							return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
-									"list of "+user+ "fetched succesfully",
-									listOfUserResponses);
-						}
-					}
-					else {
-						throw new InvalidUserRoleException("invalid user role");
-					}
-
-				})
-				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
-	}
-*/
 
 }

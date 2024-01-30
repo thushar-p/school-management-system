@@ -3,6 +3,7 @@ package com.school.sba.serviceimpl;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,6 @@ import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
-import com.school.sba.exception.SubjectCannotBeAssignedToStudentException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
 import com.school.sba.repository.AcademicProgramRepository;
@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
 					return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
 							"user found successfully",
 							mapToUserResponse(user));
-					
+
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
@@ -182,7 +182,7 @@ public class UserServiceImpl implements UserService {
 
 					user.setDeleted(true);
 					userRepository.save(user);
-					
+
 					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
 							"user deleted successfully",
 							mapToUserResponse(user));
@@ -205,7 +205,7 @@ public class UserServiceImpl implements UserService {
 					User mappedUser = mapToUser(userRequest);
 					mappedUser.setUserId(userId);
 					user = userRepository.save(mappedUser);
-					
+
 					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
 							"user updated successfully",
 							mapToUserResponse(user));
@@ -236,9 +236,9 @@ public class UserServiceImpl implements UserService {
 
 											userRepository.save(user);
 											academicProgramRepository.save(academicProgram);
-											
+
 											return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
-													"assigned to academic program successfully",
+													user.getUserRole().name().toLowerCase() + " assigned to academic program successfully",
 													mapToUserResponse(user));
 
 										}
@@ -247,8 +247,15 @@ public class UserServiceImpl implements UserService {
 										}
 									}
 									else {
-										throw new SubjectCannotBeAssignedToStudentException("subject cannot be assigned to subject");
+										academicProgram.getListOfUsers().add(user);		
+										user.getListOfAcademicPrograms().add(academicProgram);
 
+										userRepository.save(user);
+										academicProgramRepository.save(academicProgram);
+
+										return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+												user.getUserRole().name().toLowerCase() + " assigned to academic program successfully",
+												mapToUserResponse(user));										
 									}
 								})
 								.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
@@ -270,7 +277,7 @@ public class UserServiceImpl implements UserService {
 								.map(subject -> {
 									user.setSubject(subject);
 									userRepository.save(user);
-									
+
 									return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
 											"subject assigned to teacher successfully",
 											mapToUserResponse(user));
@@ -283,6 +290,45 @@ public class UserServiceImpl implements UserService {
 					}
 				})
 				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
+	}
+
+
+
+	@Override
+	public ResponseEntity<ResponseStructure<List<UserResponse>>> findAllByRole(int programId, String userRole) {
+
+		return academicProgramRepository.findById(programId)
+				.map(academicProgram -> {
+					UserRole roleOfUser = UserRole.valueOf(userRole.toUpperCase());
+
+					if(roleOfUser.equals(UserRole.ADMIN))
+						throw new IllegalArgumentException("admin cannot be fetched");
+
+					if(EnumSet.allOf(UserRole.class).contains(roleOfUser)){
+						List<User> users = userRepository.findAllByUserRole(roleOfUser);
+
+						List<User> listOfUsers = new ArrayList<User>();
+
+						users.forEach(user -> {
+							if(user.getListOfAcademicPrograms().contains(academicProgram)){
+								listOfUsers.add(user);
+							}
+						});
+						
+						List<UserResponse> collect = listOfUsers.stream()
+						.map(this::mapToUserResponse)
+						.collect(Collectors.toList());
+
+						return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+								"list of " + userRole + " found successfully",
+								collect);
+					}
+					return null;
+
+				})
+				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
+
+
 	}
 
 

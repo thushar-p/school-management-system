@@ -1,5 +1,7 @@
 package com.school.sba.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -72,4 +74,10 @@ public class UserController {
 		return userService.assignSubjectToTeacher(subjectId,userId);
 	}
 	
+	@GetMapping("/academic-programs/{programId}/user-roles/{role}/users")
+	public ResponseEntity<ResponseStructure<List<UserResponse>>> findAllByRole(@PathVariable("programId") int programId,
+			@PathVariable("role") String userRole){
+		return userService.findAllByRole(programId,userRole);
+		
+	}
 }
