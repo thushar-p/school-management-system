@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.school.sba.entity.AcademicProgram;
 import com.school.sba.entity.User;
 import com.school.sba.enums.UserRole;
 
@@ -19,5 +20,7 @@ public interface UserRepository extends JpaRepository<User, Integer>{
 	Optional<User> findByUserName(String username);
 
 	List<User> findAllByUserRole(UserRole roleOfUser);
+
+	List<User> findByUserRoleAndListOfAcademicPrograms(UserRole roleOfUser, AcademicProgram academicProgram);
 
 }

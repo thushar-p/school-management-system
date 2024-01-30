@@ -20,6 +20,7 @@ import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.InvalidUserRoleException;
+import com.school.sba.exception.NoAssociatedObjectsFoundException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
 import com.school.sba.exception.SubjectNotFoundException;
 import com.school.sba.exception.UserNotFoundByIdException;
@@ -305,25 +306,25 @@ public class UserServiceImpl implements UserService {
 						throw new IllegalArgumentException("admin cannot be fetched");
 
 					if(EnumSet.allOf(UserRole.class).contains(roleOfUser)){
-						List<User> users = userRepository.findAllByUserRole(roleOfUser);
 
-						List<User> listOfUsers = new ArrayList<User>();
+						List<UserResponse> collect = userRepository.
+								findByUserRoleAndListOfAcademicPrograms(roleOfUser, academicProgram)
+								.stream()
+								.map(this::mapToUserResponse)
+								.collect(Collectors.toList());
 
-						users.forEach(user -> {
-							if(user.getListOfAcademicPrograms().contains(academicProgram)){
-								listOfUsers.add(user);
-							}
-						});
-						
-						List<UserResponse> collect = listOfUsers.stream()
-						.map(this::mapToUserResponse)
-						.collect(Collectors.toList());
-
-						return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
-								"list of " + userRole + " found successfully",
-								collect);
+						if(collect.isEmpty()) {
+							throw new NoAssociatedObjectsFoundException("academic program not found with "+programId+" and userrole with "+userRole);
+						}
+						else {
+							return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+									"list of " + userRole + " found successfully",
+									collect);
+						}
 					}
-					return null;
+					else {
+						throw new InvalidUserRoleException("user role is incorrect");
+					}
 
 				})
 				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));

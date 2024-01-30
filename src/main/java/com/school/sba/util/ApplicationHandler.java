@@ -27,6 +27,7 @@ import com.school.sba.exception.IdNotFoundException;
 import com.school.sba.exception.InvalidProgramTypeException;
 import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.InvalidWeekDayException;
+import com.school.sba.exception.NoAssociatedObjectsFoundException;
 import com.school.sba.exception.OnlyAdminCanCreateSchoolException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
 import com.school.sba.exception.RoomAlreadyAssignedException;
@@ -186,5 +187,10 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(ClassCannotAssignedException.class)
 	public ResponseEntity<Object> handleClassCannotAssignedException(ClassCannotAssignedException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "class hour, subject and room number cannot be assigned to break time or lunch time");
+	}
+	
+	@ExceptionHandler(NoAssociatedObjectsFoundException.class)
+	public ResponseEntity<Object> handleNoAssociatedObjectsFoundException(NoAssociatedObjectsFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "no associated data found with the specified program id and user role");
 	}
 }
