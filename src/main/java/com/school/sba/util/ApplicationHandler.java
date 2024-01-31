@@ -20,6 +20,7 @@ import com.school.sba.exception.AcademicProgramNotAssignedException;
 import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.AdminAlreadyFoundException;
 import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
+import com.school.sba.exception.AdminCannotBeDeletedException;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.ClassCannotAssignedException;
 import com.school.sba.exception.ClassHourNotFoundException;
@@ -191,6 +192,11 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	
 	@ExceptionHandler(NoAssociatedObjectsFoundException.class)
 	public ResponseEntity<Object> handleNoAssociatedObjectsFoundException(NoAssociatedObjectsFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "no associated data found with the specified program id and user role");
+	}
+	
+	@ExceptionHandler(AdminCannotBeDeletedException.class)
+	public ResponseEntity<Object> handleAdminCannotBeDeletedException(AdminCannotBeDeletedException exception) {
 		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "no associated data found with the specified program id and user role");
 	}
 }
