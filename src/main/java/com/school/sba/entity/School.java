@@ -35,9 +35,6 @@ public class School {
 	private String schoolEmailId;
 	private String schoolAddress;
 	
-	@Enumerated(EnumType.STRING)
-	private DayOfWeek weekOffDay;
-	
 	private boolean isDeleted;
 	
 	@OneToOne(cascade = CascadeType.REMOVE)

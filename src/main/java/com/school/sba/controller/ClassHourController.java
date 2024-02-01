@@ -21,7 +21,7 @@ public class ClassHourController {
 	@Autowired
 	private ClassHourService classHourService;
 	
-	@PostMapping("/academic-program/{programId}/class-hours")
+	@PostMapping("/academic-programs/{programId}/class-hours")
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> addClassHour(@PathVariable("programId") int programId){
 		return classHourService.addClassHour(programId);
 	}
@@ -29,6 +29,11 @@ public class ClassHourController {
 	@PutMapping("/class-hours")
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> updateClassHour(@RequestBody List<ClassHourRequest> classHourRequest){
 		return classHourService.updateClassHour(classHourRequest);
+	}
+	
+	@PutMapping("/academic-programs/{programId}/class-hours")
+	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> generateClassHourForNextWeek(@PathVariable("programId") int programId){
+		return classHourService.generateClassHourForNextWeek(programId);
 	}
 
 }
