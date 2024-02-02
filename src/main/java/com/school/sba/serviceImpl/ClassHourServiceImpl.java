@@ -26,6 +26,7 @@ import com.school.sba.exception.ClassCannotAssignedException;
 import com.school.sba.exception.ClassHourAlreadyGeneratedException;
 import com.school.sba.exception.ClassHourNotFoundException;
 import com.school.sba.exception.IdNotFoundException;
+import com.school.sba.exception.PreviousClassHourNotFoundException;
 import com.school.sba.exception.RoomAlreadyAssignedException;
 import com.school.sba.exception.ScheduleNotFoundException;
 import com.school.sba.exception.SubjectNotAssignedToTeacherException;
@@ -100,14 +101,7 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 		if (schedule != null) {
 
-
-			LocalDateTime classBeginsAt = academicProgram.getListOfClassHours().getFirst().getClassBeginsAt();
-			LocalDateTime classEndsAt = academicProgram.getListOfClassHours().getLast().getClassEndsAt();
-
-			if ((LocalDate.now().isAfter(classBeginsAt.toLocalDate())
-					&& !LocalDate.now().isBefore(classEndsAt.toLocalDate()))
-					&& (LocalDate.now().isAfter(academicProgram.getProgramBeginsAt())
-							&& LocalDate.now().isBefore(academicProgram.getProgramEndsAt()))) {
+			if(academicProgram.getListOfClassHours().isEmpty()) {
 
 				LocalDate programBeginsAt = academicProgram.getProgramBeginsAt();
 
@@ -290,6 +284,9 @@ public class ClassHourServiceImpl implements ClassHourService {
 					List<ClassHour> currentWeekClassHours = new ArrayList<>();
 
 					LocalDateTime endDayOfPreviousWeek = academicProgram.getListOfClassHours().getLast().getClassBeginsAt();
+					
+					if(endDayOfPreviousWeek == null)
+						throw new PreviousClassHourNotFoundException("previous class hour not found");
 
 					classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.minusDays(6))
 					.forEach(classHour -> {

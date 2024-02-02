@@ -26,12 +26,17 @@ import com.school.sba.exception.ClassCannotAssignedException;
 import com.school.sba.exception.ClassHourAlreadyGeneratedException;
 import com.school.sba.exception.ClassHourNotFoundException;
 import com.school.sba.exception.IdNotFoundException;
+import com.school.sba.exception.InvalidBreakTimeException;
+import com.school.sba.exception.InvalidClassPeriodEndTimeException;
+import com.school.sba.exception.InvalidCloseTimeForScheduleException;
+import com.school.sba.exception.InvalidLunchTimeException;
 import com.school.sba.exception.InvalidProgramTypeException;
 import com.school.sba.exception.InvalidUserRoleException;
 import com.school.sba.exception.InvalidWeekDayException;
 import com.school.sba.exception.NoAssociatedObjectsFoundException;
 import com.school.sba.exception.OnlyAdminCanCreateSchoolException;
 import com.school.sba.exception.OnlyTeacherCanBeAssignedToSubjectException;
+import com.school.sba.exception.PreviousClassHourNotFoundException;
 import com.school.sba.exception.RoomAlreadyAssignedException;
 import com.school.sba.exception.ScheduleAlreadyPresentException;
 import com.school.sba.exception.ScheduleNotFoundException;
@@ -204,5 +209,30 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(ClassHourAlreadyGeneratedException.class)
 	public ResponseEntity<Object> handleClassHourAlreadyGeneratedException(ClassHourAlreadyGeneratedException exception) {
 		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "class hour already generated for the week");
+	}
+	
+	@ExceptionHandler(PreviousClassHourNotFoundException.class)
+	public ResponseEntity<Object> handlePreviousClassHourNotFoundException(PreviousClassHourNotFoundException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "previous class hour could not be found");
+	}
+	
+	@ExceptionHandler(InvalidCloseTimeForScheduleException.class)
+	public ResponseEntity<Object> handleInvalidCloseTimeForScheduleException(InvalidCloseTimeForScheduleException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "closing time input for the schedule is wrong");
+	}
+	
+	@ExceptionHandler(InvalidBreakTimeException.class)
+	public ResponseEntity<Object> handleInvalidBreakTimeException(InvalidBreakTimeException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "break time input for the schedule is wrong");
+	}
+	
+	@ExceptionHandler(InvalidLunchTimeException.class)
+	public ResponseEntity<Object> handleInvalidLunchTimeException(InvalidLunchTimeException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "lunch time input for the schedule is wrong");
+	}
+	
+	@ExceptionHandler(InvalidClassPeriodEndTimeException.class)
+	public ResponseEntity<Object> handleInvalidClassPeriodEndTimeException(InvalidClassPeriodEndTimeException exception) {
+		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "invalid class ending time");
 	}
 }

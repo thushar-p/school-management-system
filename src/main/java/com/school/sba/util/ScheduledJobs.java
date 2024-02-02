@@ -45,8 +45,7 @@ public class ScheduledJobs {
 	}
 	*/
 	
-	@Scheduled(cron = "0 59 23 * * MON-FRI")
-//	@Scheduled(fixedDelay = 1000L)
+	@Scheduled(cron = "0 0 15 * * MON")
     public void myTask() {
         // Your task logic here
         System.out.println("Task executed every Monday at midnight");
