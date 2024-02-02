@@ -3,6 +3,7 @@
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,8 +29,11 @@ public class School {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int schoolId;
 	private String schoolName;
+	@Column(unique = true)
 	private long schoolContactNumber;
+	@Column(unique = true)
 	private String schoolEmailId;
+	@Column(unique = true)
 	private String schoolAddress;
 	
 	private boolean isDeleted;

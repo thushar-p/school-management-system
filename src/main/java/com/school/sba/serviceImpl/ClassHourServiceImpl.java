@@ -23,7 +23,6 @@ import com.school.sba.enums.UserRole;
 import com.school.sba.exception.AcademicProgramNotAssignedException;
 import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.ClassCannotAssignedException;
-import com.school.sba.exception.ClassHourAlreadyGeneratedException;
 import com.school.sba.exception.ClassHourNotFoundException;
 import com.school.sba.exception.IdNotFoundException;
 import com.school.sba.exception.PreviousClassHourNotFoundException;
@@ -98,8 +97,6 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 		if (schedule != null) {
 
-			if (academicProgram.getListOfClassHours().isEmpty()) {
-
 				LocalDate programBeginsAt = academicProgram.getProgramBeginsAt();
 
 				LocalDateTime currentDateTime;
@@ -166,10 +163,8 @@ public class ClassHourServiceImpl implements ClassHourService {
 						currentDateTime = currentDateTime.plusDays(1).with(schedule.getOpensAt());
 					} else
 						currentDateTime = currentDateTime.plusDays(1).with(schedule.getOpensAt());
-					;
+					
 				}
-			} else
-				throw new ClassHourAlreadyGeneratedException("class hour already generated");
 		} else
 			throw new ScheduleNotFoundException("schedule not found");
 
@@ -181,12 +176,14 @@ public class ClassHourServiceImpl implements ClassHourService {
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> addClassHour(int programId) {
 		return academicProgramRepository.findById(programId).map(academicProgram -> {
 			List<ClassHour> listOfClassHours = academicProgram.getListOfClassHours();
-			
+
 			if(listOfClassHours.isEmpty())
 				listOfClassHours = generateClassHour(academicProgram);
+//			else if(listOfClassHours.getFirst().)
+//			throw new ClassHourAlreadyGeneratedException("class hour already generated");
 			else {
 				for(ClassHour cl : listOfClassHours) {
-					if(cl.getClassBeginsAt().toLocalDate().isEqual(LocalDate.now())) {
+					if(!cl.getClassBeginsAt().toLocalDate().isEqual(LocalDate.now())) {
 						listOfClassHours = generateClassHour(academicProgram);
 					}
 				}
@@ -273,6 +270,7 @@ public class ClassHourServiceImpl implements ClassHourService {
 				mapToClassHourResponse(listOfClassHour));
 	}
 
+	
 	@Override
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> generateClassHourForNextWeek(int programId) {
 
@@ -283,6 +281,8 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 			if (endDayOfPreviousWeek == null)
 				throw new PreviousClassHourNotFoundException("previous class hour not found");
+
+//			if(!classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.plusDays(1)).isEmpty())
 
 			classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.minusDays(6)).forEach(classHour -> {
 				currentWeekClassHours.add(ClassHour.builder().classBeginsAt(classHour.getClassBeginsAt().plusWeeks(1))
@@ -302,12 +302,11 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 	public void classHourGen(int programId, LocalDateTime now) {
 
-		if (!classHourRepository.existsByClassBeginsAt(
-				now.with(academicProgramRepository.findById(programId).get().getSchool().getSchedule().getOpensAt()))) {
-			System.out.println("hello 2");
+		if (!classHourRepository.existsByClassBeginsAt(now
+				.with(academicProgramRepository.findById(programId).get()
+						.getSchool()
+						.getSchedule().getOpensAt()))) {
 			generateClassHourForNextWeek(programId);
-			System.out.println("hello 3");
-
 		}
 	}
 

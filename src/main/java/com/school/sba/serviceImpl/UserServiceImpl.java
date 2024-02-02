@@ -63,13 +63,12 @@ public class UserServiceImpl implements UserService {
 				.userEmail(userRequest.getUserEmail())
 				.userContact(userRequest.getUserContact())
 				.userRole(UserRole.valueOf(userRequest.getUserRole().toUpperCase()))
-				.school(userRequest.getSchool())
 				.build();
 	}
 
 
 
-	public UserResponse mapToUserResponse(User user) {
+	private UserResponse mapToUserResponse(User user) {
 
 		List<String> listOfProgramName = new ArrayList<>();
 

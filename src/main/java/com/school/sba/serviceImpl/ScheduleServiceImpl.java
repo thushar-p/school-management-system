@@ -72,7 +72,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 				LocalTime lunchTime = scheduleRequest.getLunchTime();
 				LocalTime breakTime = scheduleRequest.getBreakTime();
 
-				if (closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
+				if (closesAt.equals(opensAt) ||closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
 					throw new InvalidCloseTimeForScheduleException("invalid close time");
 
 				LocalTime classStarts = null;
@@ -149,7 +149,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 			LocalTime lunchTime = scheduleRequest.getLunchTime();
 			LocalTime breakTime = scheduleRequest.getBreakTime();
 
-			if (closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
+			if (closesAt.equals(opensAt) || closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
 				throw new InvalidCloseTimeForScheduleException("invalid close time");
 
 			LocalTime classStarts = null;
