@@ -12,5 +12,6 @@ public class ExcelRequest {
 	LocalDate fromDate;
 	LocalDate toDate;
 	String filePath;
+//	MultipartFile file;
 
 }

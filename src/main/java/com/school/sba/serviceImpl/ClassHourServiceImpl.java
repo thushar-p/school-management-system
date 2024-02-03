@@ -1,6 +1,9 @@
 package com.school.sba.serviceimpl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,13 +12,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.school.sba.entity.AcademicProgram;
 import com.school.sba.entity.ClassHour;
@@ -28,6 +34,7 @@ import com.school.sba.enums.UserRole;
 import com.school.sba.exception.AcademicProgramNotAssignedException;
 import com.school.sba.exception.AcademicProgramNotFoundException;
 import com.school.sba.exception.ClassCannotAssignedException;
+import com.school.sba.exception.ClassHourAlreadyGeneratedException;
 import com.school.sba.exception.ClassHourNotFoundException;
 import com.school.sba.exception.IdNotFoundException;
 import com.school.sba.exception.PreviousClassHourNotFoundException;
@@ -288,7 +295,8 @@ public class ClassHourServiceImpl implements ClassHourService {
 			if (endDayOfPreviousWeek == null)
 				throw new PreviousClassHourNotFoundException("previous class hour not found");
 
-			//			if(!classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.plusDays(1)).isEmpty())
+			if(!classHourRepository.findByClassBeginsAtAfter(LocalDateTime.now().with(LocalTime.MIDNIGHT).plusWeeks(1).minusDays(1)).isEmpty())
+				throw new ClassHourAlreadyGeneratedException("class hour is already generated for the week");
 
 			classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.minusDays(6)).forEach(classHour -> {
 				currentWeekClassHours.add(ClassHour.builder().classBeginsAt(classHour.getClassBeginsAt().plusWeeks(1))
@@ -320,62 +328,134 @@ public class ClassHourServiceImpl implements ClassHourService {
 	public ResponseEntity<ResponseStructure<String>> writeExcelSheet(int programId, ExcelRequest excelRequest) {
 
 		return academicProgramRepository.findById(programId)
-		.map(academicProgram -> {
-			List<ClassHour> listOfClassHours = classHourRepository.
-					findByAcademicProgramsAndClassBeginsAtBetween(academicProgram, 
-							excelRequest.getFromDate().atStartOfDay(),
-							excelRequest.getToDate().plusDays(1).atStartOfDay());
-			
-			String newPath = excelRequest.getFilePath().concat("\\test.xlsx");
+				.map(academicProgram -> {
+					List<ClassHour> listOfClassHours = classHourRepository.
+							findByAcademicProgramsAndClassBeginsAtBetween(academicProgram, 
+									excelRequest.getFromDate().atStartOfDay(),
+									excelRequest.getToDate().plusDays(1).atStartOfDay());
 
-			XSSFWorkbook workbook = new XSSFWorkbook();
-			XSSFSheet sheet = workbook.createSheet();
+					String newPath = excelRequest.getFilePath().concat("\\test.xlsx");
 
-			int rowIndex = 0;
-			XSSFRow header = sheet.createRow(rowIndex);
-			header.createCell(0).setCellValue("Date");
-			header.createCell(1).setCellValue("Begin Time");
-			header.createCell(2).setCellValue("End Time");
-			header.createCell(3).setCellValue("Subject");
-			header.createCell(4).setCellValue("Teacher");
-			header.createCell(5).setCellValue("Room number");
+					XSSFWorkbook workbook = new XSSFWorkbook();
+					XSSFSheet sheet = workbook.createSheet();
 
-			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-			DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+					int rowIndex = 0;
+					XSSFRow header = sheet.createRow(rowIndex);
+					header.createCell(0).setCellValue("Date");
+					header.createCell(1).setCellValue("Begin Time");
+					header.createCell(2).setCellValue("End Time");
+					header.createCell(3).setCellValue("Subject");
+					header.createCell(4).setCellValue("Teacher");
+					header.createCell(5).setCellValue("Room number");
 
-			for(ClassHour classHour : listOfClassHours) {
-				
-				String subjectName = "NOT ASSIGNED";
-				String username = "NOT ASSIGNED";
-				
-				if(classHour.getSubject() != null)
-					subjectName = classHour.getSubject().getSubjectName();
-				if(classHour.getUser() != null)
-					username = classHour.getUser().getUserName();
+					DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+					DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+					for(ClassHour classHour : listOfClassHours) {
+
+						String subjectName = "NOT ASSIGNED";
+						String username = "NOT ASSIGNED";
+
+						if(classHour.getSubject() != null)
+							subjectName = classHour.getSubject().getSubjectName();
+						if(classHour.getUser() != null)
+							username = classHour.getUser().getUserName();
+
+
+						XSSFRow row = sheet.createRow(++rowIndex);
+						row.createCell(0).setCellValue(dateFormatter.format(classHour.getClassBeginsAt()));
+						row.createCell(1).setCellValue(timeFormatter.format(classHour.getClassBeginsAt()));
+						row.createCell(2).setCellValue(timeFormatter.format(classHour.getClassEndsAt()));
+						row.createCell(3).setCellValue(subjectName);
+						row.createCell(4).setCellValue(username);
+						row.createCell(5).setCellValue(classHour.getClassRoomNumber());
+
+					}			
+
+					try {
+						workbook.write(new FileOutputStream(newPath));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+							"success",
+							"suceessful");
+				})
+				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));		
+	}
+
+	@Override
+	public ResponseEntity<?> writeToExcel(int programId, LocalDate fromDate, LocalDate toDate, MultipartFile file) {
+
+		return academicProgramRepository.findById(programId)
+				.map(academicProgram -> {
+					List<ClassHour> listOfClassHours = classHourRepository.
+							findByAcademicProgramsAndClassBeginsAtBetween(academicProgram, 
+									fromDate.atStartOfDay(),
+									toDate.plusDays(1).atStartOfDay());
+
+					String path = "E:\\excelCheck\\New folder\\"+file.getOriginalFilename();
+					byte[] byteArray = null;
+					XSSFWorkbook workbook;
+					try {
+						workbook = new XSSFWorkbook(file.getInputStream());
+
+
+						DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+						DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+						workbook.forEach(sheet -> {
+							int rowIndex = 0;
+							Row header = sheet.createRow(rowIndex);
+							header.createCell(0).setCellValue("Date");
+							header.createCell(1).setCellValue("Begin Time");
+							header.createCell(2).setCellValue("End Time");
+							header.createCell(3).setCellValue("Subject");
+							header.createCell(4).setCellValue("Teacher");
+							header.createCell(5).setCellValue("Room number");
+
+							for(ClassHour classHour : listOfClassHours) {
+
+								String subjectName = "NOT ASSIGNED";
+								String username = "NOT ASSIGNED";
+
+								if(classHour.getSubject() != null)
+									subjectName = classHour.getSubject().getSubjectName();
+								if(classHour.getUser() != null)
+									username = classHour.getUser().getUserName();
+
+
+								Row row = sheet.createRow(++rowIndex);
+								row.createCell(0).setCellValue(dateFormatter.format(classHour.getClassBeginsAt()));
+								row.createCell(1).setCellValue(timeFormatter.format(classHour.getClassBeginsAt()));
+								row.createCell(2).setCellValue(timeFormatter.format(classHour.getClassEndsAt()));
+								row.createCell(3).setCellValue(subjectName);
+								row.createCell(4).setCellValue(username);
+								row.createCell(5).setCellValue(classHour.getClassRoomNumber());
+
+							}
+
+						});
+
+						ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+						workbook.write(outputStream);
+						workbook.write(new FileOutputStream(path));
+						workbook.close();
+
+						byteArray = outputStream.toByteArray();
+
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					
-					
-				
-				XSSFRow row = sheet.createRow(++rowIndex);
-				row.createCell(0).setCellValue(dateFormatter.format(classHour.getClassBeginsAt()));
-				row.createCell(1).setCellValue(timeFormatter.format(classHour.getClassBeginsAt()));
-				row.createCell(2).setCellValue(timeFormatter.format(classHour.getClassEndsAt()));
-				row.createCell(3).setCellValue(subjectName);
-				row.createCell(4).setCellValue(username);
-				row.createCell(5).setCellValue(classHour.getClassRoomNumber());
+					return ResponseEntity.ok()
+							.header("Content Disposition", "attachment; filename="+file.getOriginalFilename())
+							.contentType(MediaType.APPLICATION_OCTET_STREAM)
+							.body(byteArray);
+				})
+				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 
-			}			
-			
-			try {
-				workbook.write(new FileOutputStream(newPath));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
-					"success",
-					"suceessful");
-		})
-		.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));		
 	}
 
 }
