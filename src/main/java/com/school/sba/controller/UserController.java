@@ -69,6 +69,7 @@ public class UserController {
 		return userService.assignSubjectToTeacher(subjectId, userId);
 	}
 
+	@PreAuthorize("hasAuthority('ADMIN') OR hasAuthority('TEACHER')")
 	@GetMapping("/academic-programs/{programId}/user-roles/{role}/users")
 	public ResponseEntity<ResponseStructure<List<UserResponse>>> findAllByRole(@PathVariable("programId") int programId,
 			@PathVariable("role") String userRole) {

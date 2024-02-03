@@ -38,6 +38,7 @@ public class AcademicController {
 		return academicProgramService.findAllAcademicProgram(schoolId);
 	}
 	
+	@PreAuthorize("hasAuthority('ADMIN')")
 	@DeleteMapping("academic-programs/{programId}")
 	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> softDeleteAcademicProgram(@PathVariable("programId") int programId){
 		return academicProgramService.softDeleteAcademicProgram(programId);
@@ -48,6 +49,7 @@ public class AcademicController {
 		return academicProgramService.getAcademicProgram(programId);
 	}
 	
+	@PreAuthorize("hasAuthority('ADMIN')")
 	@PutMapping("auto-generate/{programId}/academic-programs")
 	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> autoGenerateButton(@PathVariable("programId") int programId){
 		return academicProgramService.autoGenerateButton(programId);
