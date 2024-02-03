@@ -17,6 +17,8 @@ import com.school.sba.responsedto.AcademicProgramResponse;
 import com.school.sba.service.AcademicProgramService;
 import com.school.sba.util.ResponseStructure;
 
+import jakarta.validation.Valid;
+
 @RestController
 public class AcademicController {
 	
@@ -26,7 +28,7 @@ public class AcademicController {
 	@PreAuthorize("hasAuthority('ADMIN')")
 	@PostMapping("/schools/{schoolId}/academic-programs")
 	public ResponseEntity<ResponseStructure<AcademicProgramResponse>> createProgram(@PathVariable("schoolId") int schoolId,
-			@RequestBody AcademicProgramRequest academicProgramRequest){
+			@RequestBody @Valid AcademicProgramRequest academicProgramRequest){
 		return academicProgramService.createProgram(schoolId, academicProgramRequest);
 	}
 	
