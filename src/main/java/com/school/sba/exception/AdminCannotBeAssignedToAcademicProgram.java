@@ -5,12 +5,12 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AdminAlreadyExistException extends RuntimeException {
-	
+public class AdminCannotBeAssignedToAcademicProgram extends RuntimeException {
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private String message;
 
+	private String message;
 }

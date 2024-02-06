@@ -5,14 +5,27 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.school.sba.entity.AcademicProgram;
 import com.school.sba.entity.School;
-import com.school.sba.exception.SchoolNotFoundByIdException;
+import com.school.sba.enums.UserRole;
+import com.school.sba.exception.SchoolAlreadyPresentException;
+import com.school.sba.exception.SchoolCannotBeCreatedException;
+import com.school.sba.exception.SchoolNotFoundException;
+import com.school.sba.exception.UserNotFoundByIdException;
+import com.school.sba.repository.AcademicProgramRepository;
+import com.school.sba.repository.ClassHourRepository;
 import com.school.sba.repository.SchoolRepository;
+import com.school.sba.repository.UserRepository;
 import com.school.sba.requestdto.SchoolRequest;
+import com.school.sba.responsedto.SchoolResponse;
 import com.school.sba.service.SchoolService;
+import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
+
+import jakarta.transaction.Transactional;
 
 
 @Service
@@ -22,101 +35,151 @@ public class SchoolServiceImpl implements SchoolService{
 	private SchoolRepository schoolRepo;
 
 	@Autowired
-	private ResponseStructure<School> responseStructure;
-
+	private UserRepository userRepo;
 	
-	private School mapToUser(SchoolRequest schoolRequest) {
+	@Autowired
+	private ClassHourRepository classHourRepository;
+
+	@Autowired
+	private AcademicProgramRepository academicProgramRepository;
+	
+	@Transactional
+	public void hardDeleteSchool() {
+		
+		schoolRepo.findByIsDeleted(true).forEach(school -> {
+			
+			List<AcademicProgram> listOfAcademicPrograms = school.getListOfAcademicPrograms();
+			
+			listOfAcademicPrograms.forEach(academicProgram -> {
+				classHourRepository.deleteAll(academicProgram.getListOfClassHours());
+				academicProgramRepository.delete(academicProgram);
+			});
+			
+			userRepo.findBySchool(school).forEach(user -> {
+				if(!user.getUserRole().equals(UserRole.ADMIN)) {
+					userRepo.delete(user);
+				}
+			});
+			
+			schoolRepo.delete(school);
+		});
+		
+	}
+
+	private School mapToSchool(SchoolRequest schoolRequest) {
 		return School.builder()
 				.schoolName(schoolRequest.getSchoolName())
 				.schoolEmailId(schoolRequest.getSchoolEmailId())
-				.schoolContactNumber(schoolRequest.getSchoolContactNumber())
+				.schoolContactNumber(Long.parseLong(schoolRequest.getSchoolContactNumber()))
 				.schoolAddress(schoolRequest.getSchoolAddress())
 				.build();
 	}
-	
-	@Override
-	public ResponseEntity<ResponseStructure<School>> saveSchool(SchoolRequest schoolRequest){
 
-		School saveStudent = schoolRepo.save(mapToUser(schoolRequest));
-
-		responseStructure.setStatus(HttpStatus.CREATED.value());
-		responseStructure.setMessage("School data inserted successfully");
-		responseStructure.setData(saveStudent);
-
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.CREATED);
-
+	private SchoolResponse mapToSchoolResponse(School school) {
+		return SchoolResponse.builder()
+				.schoolId(school.getSchoolId())
+				.schoolName(school.getSchoolName())
+				.schoolEmailId(school.getSchoolEmailId())
+				.schoolContactNumber(school.getSchoolContactNumber())
+				.schoolAddress(school.getSchoolAddress())
+				.build();
 	}
 
-
-
 	@Override
-	public ResponseEntity<ResponseStructure<School>> deleteSchool(Integer schoolId) {
+	public ResponseEntity<ResponseStructure<SchoolResponse>> createSchool(SchoolRequest schoolRequest){
 
-		School existingSchool = schoolRepo.findById(schoolId)
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be deleted due to absence of school id"));
+		String username = SecurityContextHolder.getContext()
+				.getAuthentication()
+				.getName();
 
-		schoolRepo.deleteById(schoolId);
+		return userRepo.findByUserName(username)
+				.map(user -> {
 
-		responseStructure.setStatus(HttpStatus.OK.value());
-		responseStructure.setMessage("School data deleted successfully from database");
-		responseStructure.setData(existingSchool);
+					if(schoolRepo.existsByIsDeleted(false)) {
+						throw new SchoolAlreadyPresentException("school already exist");
+					}
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.OK);
-	}
-	
-	
+					user.setSchool(null);
 
-	@Override
-	public ResponseEntity<ResponseStructure<School>> updateSchool(Integer schoolId, SchoolRequest schoolRequest)
-			throws SchoolNotFoundByIdException {
+					if(user.getUserRole().equals(UserRole.ADMIN)) {
+						if(user.getSchool() == null) {
+							School school = schoolRepo.save(mapToSchool(schoolRequest));
 
-		School existingSchool = schoolRepo.findById(schoolId)
-				.map(u -> {
-					School school = mapToUser(schoolRequest);
-					school.setSchoolId(schoolId);
-					return schoolRepo.save(school);
+							userRepo.findAll().forEach(userFromRepo -> {
+								userFromRepo.setSchool(school);
+								userRepo.save(user);
+							});
+
+							return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+									"School inserted successfully",
+									mapToSchoolResponse(school));
+						}
+						else {
+							throw new SchoolCannotBeCreatedException("school is already present");
+						}
+					}
+					else {
+						throw new SchoolCannotBeCreatedException("school can be created only by ADMIN");
+					}
 				})
-				.orElseThrow(() -> new SchoolNotFoundByIdException("school object cannot be updated due to absence of technical problems"));
-
-
-		responseStructure.setStatus(HttpStatus.OK.value());
-		responseStructure.setMessage("School data updated successfully in database");
-		responseStructure.setData(existingSchool);
-
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.OK);
+				.orElseThrow(() -> new UserNotFoundByIdException("user not found"));
 
 	}
-	
-	
+
+
 
 	@Override
-	public ResponseEntity<ResponseStructure<School>> findSchool(Integer schoolId)
-			throws SchoolNotFoundByIdException {
+	public ResponseEntity<ResponseStructure<SchoolResponse>> updateSchool(int schoolId, SchoolRequest schoolRequest){
 
-		School fetchedSchool = schoolRepo.findById(schoolId)
-				.orElseThrow(() -> new SchoolNotFoundByIdException("School object cannot be fetched because it is not present in DB"));
+		return schoolRepo.findById(schoolId)
+				.map(school -> {
+
+					school = mapToSchool(schoolRequest);
+					school.setSchoolId(school.getSchoolId());
+					school = schoolRepo.save(school);
+
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+							"School updated successfully",
+							mapToSchoolResponse(school));
+				})
+				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
+
+	}
 
 
-		responseStructure.setStatus(HttpStatus.FOUND.value());
-		responseStructure.setMessage("School data found in database");
-		responseStructure.setData(fetchedSchool);
+	@Override
+	public ResponseEntity<ResponseStructure<SchoolResponse>> findSchool(int schoolId){
 
-		return new ResponseEntity<ResponseStructure<School>>(responseStructure, HttpStatus.FOUND);
-
+		return schoolRepo.findById(schoolId)
+				.map(school -> {
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
+							"school found successfully",
+							mapToSchoolResponse(school));
+				})
+				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
 	}
 
 	@Override
-	public ResponseEntity<ResponseStructure<List<School>>> findAllSchool() {
+	public ResponseEntity<ResponseStructure<SchoolResponse>> softDeleteSchool(int schoolId) {
 
-		List<School> all = schoolRepo.findAll();
+		return schoolRepo.findById(schoolId)	
+				.map(school -> {
+					if(school.isDeleted() == true)
+						throw new SchoolNotFoundException("school not found");
 
-		ResponseStructure<List<School>> rs = new ResponseStructure<List<School>>();
-		rs.setStatus(HttpStatus.FOUND.value());
-		rs.setMessage("School data found in database");
-		rs.setData(all);
+					school.setDeleted(true);
+					schoolRepo.save(school);
 
-		return new ResponseEntity<ResponseStructure<List<School>>>(rs, HttpStatus.FOUND);
 
+					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
+							"school deleted successfully", 
+							mapToSchoolResponse(school));
+
+				})
+				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
 	}
+
+	
+
 
 }
