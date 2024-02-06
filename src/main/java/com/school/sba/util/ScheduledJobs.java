@@ -35,11 +35,21 @@ public class ScheduledJobs {
 		schoolServiceImpl.hardDeleteSchool();
 	}
 	
-	 @Scheduled(cron = "0 0 0 * * MON")
+	/*
+	@Scheduled(cron = "0 0 0 * * MON")
 	public void updateClassHour() {
+		 System.out.println("hello 1");
 		academicProgramRepository.findAll().forEach(academicProgram -> {
-			classHourServiceImpl.generateClassHourForNextWeek(academicProgram.getProgramId());
+			classHourServiceImpl.classHourGen(academicProgram.getProgramId(), LocalDateTime.now());
 		});
 	}
+	*/
+	
+	@Scheduled(cron = "0 59 23 * * MON-FRI")
+//	@Scheduled(fixedDelay = 1000L)
+    public void myTask() {
+        // Your task logic here
+        System.out.println("Task executed every Monday at midnight");
+    }
 
 }

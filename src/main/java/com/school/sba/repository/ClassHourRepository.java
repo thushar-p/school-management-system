@@ -16,4 +16,6 @@ public interface ClassHourRepository extends JpaRepository<ClassHour, Integer> {
 
 	List<ClassHour> findByClassBeginsAtAfter(LocalDateTime firstDayOfPreviousWeek);
 
+	boolean existsByClassBeginsAt(LocalDateTime with);
+
 }

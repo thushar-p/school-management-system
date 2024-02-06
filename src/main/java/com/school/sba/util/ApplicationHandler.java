@@ -23,6 +23,7 @@ import com.school.sba.exception.AdminCannotBeAssignedToAcademicProgram;
 import com.school.sba.exception.AdminCannotBeDeletedException;
 import com.school.sba.exception.AdminNotFoundException;
 import com.school.sba.exception.ClassCannotAssignedException;
+import com.school.sba.exception.ClassHourAlreadyGeneratedException;
 import com.school.sba.exception.ClassHourNotFoundException;
 import com.school.sba.exception.IdNotFoundException;
 import com.school.sba.exception.InvalidProgramTypeException;
@@ -198,5 +199,10 @@ public class ApplicationHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(AdminCannotBeDeletedException.class)
 	public ResponseEntity<Object> handleAdminCannotBeDeletedException(AdminCannotBeDeletedException exception) {
 		return structure(HttpStatus.NOT_FOUND, exception.getMessage(), "no associated data found with the specified program id and user role");
+	}
+	
+	@ExceptionHandler(ClassHourAlreadyGeneratedException.class)
+	public ResponseEntity<Object> handleClassHourAlreadyGeneratedException(ClassHourAlreadyGeneratedException exception) {
+		return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "class hour already generated for the week");
 	}
 }
