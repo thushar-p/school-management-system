@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<ResponseStructure<UserResponse>> registerAdmin(UserRequest userRequest) {
-
+		
 		try {
 			if (!EnumSet.allOf(UserRole.class)
 					.contains(UserRole.valueOf(userRequest.getUserRole().toUpperCase()))) {
