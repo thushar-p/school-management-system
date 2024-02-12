@@ -12,10 +12,8 @@ import lombok.Setter;
 public class ExcelRequest {
 	
 	@NotNull(message = "from date should not be null")
-	@NotBlank(message = "from date should not be empty")
 	LocalDate fromDate;
 	@NotNull(message = "to date should not be null")
-	@NotBlank(message = "to date should not be empty")
 	LocalDate toDate;
 	@NotNull(message = "file path should not be null")
 	@NotBlank(message = "file path should not be empty")
