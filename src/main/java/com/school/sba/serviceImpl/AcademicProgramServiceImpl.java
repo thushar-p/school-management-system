@@ -54,10 +54,10 @@ public class AcademicProgramServiceImpl implements AcademicProgramService {
 
 		List<String> subjects = new ArrayList<String>();
 
-		List<Subject> listOfSubject = academicProgram.getListOfSubject();
+		List<Subject> listOfSubjects = academicProgram.getListOfSubject();
 
-		if (listOfSubject != null) {
-			listOfSubject.forEach(sub -> {
+		if (listOfSubjects != null) {
+			listOfSubjects.forEach(sub -> {
 				subjects.add(sub.getSubjectName());
 			});
 		}
