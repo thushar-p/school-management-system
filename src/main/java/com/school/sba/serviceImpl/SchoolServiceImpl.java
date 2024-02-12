@@ -42,12 +42,35 @@ public class SchoolServiceImpl implements SchoolService{
 
 	@Autowired
 	private AcademicProgramRepository academicProgramRepository;
+	
+	@Transactional
+	public void hardDeleteSchool() {
+		
+		schoolRepo.findByIsDeleted(true).forEach(school -> {
+			
+			List<AcademicProgram> listOfAcademicPrograms = school.getListOfAcademicPrograms();
+			
+			listOfAcademicPrograms.forEach(academicProgram -> {
+				classHourRepository.deleteAll(academicProgram.getListOfClassHours());
+				academicProgramRepository.delete(academicProgram);
+			});
+			
+			userRepo.findBySchool(school).forEach(user -> {
+				if(!user.getUserRole().equals(UserRole.ADMIN)) {
+					userRepo.delete(user);
+				}
+			});
+			
+			schoolRepo.delete(school);
+		});
+		
+	}
 
 	private School mapToSchool(SchoolRequest schoolRequest) {
 		return School.builder()
 				.schoolName(schoolRequest.getSchoolName())
 				.schoolEmailId(schoolRequest.getSchoolEmailId())
-				.schoolContactNumber(schoolRequest.getSchoolContactNumber())
+				.schoolContactNumber(Long.parseLong(schoolRequest.getSchoolContactNumber()))
 				.schoolAddress(schoolRequest.getSchoolAddress())
 				.build();
 	}
@@ -156,28 +179,7 @@ public class SchoolServiceImpl implements SchoolService{
 				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
 	}
 
-	@Transactional
-	public void hardDeleteSchool() {
-		
-		schoolRepo.findByIsDeleted(true).forEach(school -> {
-			
-			List<AcademicProgram> listOfAcademicPrograms = school.getListOfAcademicPrograms();
-			
-			listOfAcademicPrograms.forEach(academicProgram -> {
-				classHourRepository.deleteAll(academicProgram.getListOfClassHours());
-				academicProgramRepository.delete(academicProgram);
-			});
-			
-			userRepo.findBySchool(school).forEach(user -> {
-				if(!user.getUserRole().equals(UserRole.ADMIN)) {
-					userRepo.delete(user);
-				}
-			});
-			
-			schoolRepo.delete(school);
-		});
-		
-	}
+	
 
 
 }
