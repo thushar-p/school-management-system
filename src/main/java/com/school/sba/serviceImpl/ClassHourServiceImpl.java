@@ -53,6 +53,8 @@ import com.school.sba.service.ClassHourService;
 import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class ClassHourServiceImpl implements ClassHourService {
 
@@ -450,6 +452,39 @@ public class ClassHourServiceImpl implements ClassHourService {
 					.contentType(MediaType.APPLICATION_OCTET_STREAM).body(byteArray);
 		}).orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 
+	}
+
+	@Transactional
+	public void updaeClassStatus() {
+		LocalDateTime now = LocalDateTime.now();
+
+		academicProgramRepository.findAll().forEach(academicProgram -> {
+
+			academicProgram.getListOfClassHours().forEach(classHour -> {
+
+				if (!classHour.getClassStatus().equals(ClassStatus.BREAK_TIME) ||
+						!classHour.getClassStatus().equals(ClassStatus.LUNCH_TIME)) {
+
+					if ((classHour.getClassBeginsAt().isBefore(now) || classHour.getClassBeginsAt().isEqual(now)) &&
+							(classHour.getClassEndsAt().isAfter(now) || classHour.getClassEndsAt().isEqual(now))) {
+
+						classHour.setClassStatus(ClassStatus.ONGOING);
+						classHourRepository.save(classHour);
+
+					} else if (classHour.getClassEndsAt().isBefore(now)) {
+
+						classHour.setClassStatus(ClassStatus.COMPLETED);
+						classHourRepository.save(classHour);
+
+					} else if (classHour.getClassBeginsAt().isAfter(now)) {
+
+						classHour.setClassStatus(ClassStatus.UPCOMING);
+						classHourRepository.save(classHour);
+						
+					}
+				}
+			});
+		});
 	}
 
 }
