@@ -26,7 +26,7 @@ import com.school.sba.util.ResponseEntityProxy;
 import com.school.sba.util.ResponseStructure;
 
 @Service
-public class ScheduleServiceImpl implements ScheduleService{
+public class ScheduleServiceImpl implements ScheduleService {
 
 	@Autowired
 	private ScheduleRepository scheduleRepository;
@@ -34,104 +34,89 @@ public class ScheduleServiceImpl implements ScheduleService{
 	@Autowired
 	private SchoolRepository schoolRepository;
 
-
-	private ScheduleResponse mapToScheduleResponse(Schedule schedule) {		
-		return ScheduleResponse.builder()
-				.scheduleId(schedule.getScheduleId())
-				.opensAt(schedule.getOpensAt())
-				.closesAt(schedule.getClosesAt())
-				.classHoursPerDay(schedule.getClassHoursPerDay())
-				.classHoursLengthInMinutes((int)
-						(Duration.ofMinutes(schedule.getClassHoursLengthInMinutes().toMinutes())
-								.toMinutes()))
+	private ScheduleResponse mapToScheduleResponse(Schedule schedule) {
+		return ScheduleResponse.builder().scheduleId(schedule.getScheduleId()).opensAt(schedule.getOpensAt())
+				.closesAt(schedule.getClosesAt()).classHoursPerDay(schedule.getClassHoursPerDay())
+				.classHoursLengthInMinutes(
+						(int) (Duration.ofMinutes(schedule.getClassHoursLengthInMinutes().toMinutes()).toMinutes()))
 				.breakTime(schedule.getBreakTime())
-				.breakLengthInMinutes(((int)
-						(Duration.ofMinutes(schedule.getBreakLengthInMinutes().toMinutes())
-								.toMinutes())))
-				.lunchLengthInMinutes((int)
-						(Duration.ofMinutes(schedule.getLunchLengthInMinutes().toMinutes())
-								.toMinutes()))
-				.lunchTime(schedule.getLunchTime())
-				.build();
+				.breakLengthInMinutes(
+						((int) (Duration.ofMinutes(schedule.getBreakLengthInMinutes().toMinutes()).toMinutes())))
+				.lunchLengthInMinutes(
+						(int) (Duration.ofMinutes(schedule.getLunchLengthInMinutes().toMinutes()).toMinutes()))
+				.lunchTime(schedule.getLunchTime()).build();
 	}
 
 	private Schedule mapToSchedule(ScheduleRequest scheduleRequest) {
-		return Schedule.builder()
-				.opensAt(scheduleRequest.getOpensAt())
-				.closesAt(scheduleRequest.getClosesAt())
+		return Schedule.builder().opensAt(scheduleRequest.getOpensAt()).closesAt(scheduleRequest.getClosesAt())
 				.classHoursPerDay(scheduleRequest.getClassHoursPerDay())
 				.classHoursLengthInMinutes(Duration.ofMinutes(scheduleRequest.getClassHoursLengthInMinutes()))
 				.breakTime(scheduleRequest.getBreakTime())
 				.breakLengthInMinutes(Duration.ofMinutes(scheduleRequest.getBreakLengthInMinutes()))
 				.lunchLengthInMinutes(Duration.ofMinutes(scheduleRequest.getLunchLengthInMinutes()))
-				.lunchTime(scheduleRequest.getLunchTime())
-				.build();
+				.lunchTime(scheduleRequest.getLunchTime()).build();
 	}
 
 	@Override
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> saveSchedule(int schoolId,
 			ScheduleRequest scheduleRequest) {
 
-		return schoolRepository.findById(schoolId)
-				.map(school -> {
-					if(school.getSchedule() == null) {
-						
-						LocalTime opensAt = scheduleRequest.getOpensAt();
-						LocalTime closesAt = scheduleRequest.getClosesAt();
-						int numberOfClassesPerDay = scheduleRequest.getClassHoursPerDay();
-						long classHourLength = Duration.ofMinutes(scheduleRequest.getClassHoursLengthInMinutes()).toMinutes();
-						long breakHourLength = Duration.ofMinutes(scheduleRequest.getBreakLengthInMinutes()).toMinutes();
-						long lunchHourLength = Duration.ofMinutes(scheduleRequest.getLunchLengthInMinutes()).toMinutes();
-						LocalTime lunchTime = scheduleRequest.getLunchTime();
-						LocalTime breakTime = scheduleRequest.getBreakTime();
+		return schoolRepository.findById(schoolId).map(school -> {
+			if (school.getSchedule() == null) {
+
+				LocalTime opensAt = scheduleRequest.getOpensAt();
+				LocalTime closesAt = scheduleRequest.getClosesAt();
+				long classHourLength = Duration.ofMinutes(scheduleRequest.getClassHoursLengthInMinutes()).toMinutes();
+				long breakHourLength = Duration.ofMinutes(scheduleRequest.getBreakLengthInMinutes()).toMinutes();
+				long lunchHourLength = Duration.ofMinutes(scheduleRequest.getLunchLengthInMinutes()).toMinutes();
+				LocalTime lunchTime = scheduleRequest.getLunchTime();
+				LocalTime breakTime = scheduleRequest.getBreakTime();
+
+				if (closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
+					throw new InvalidCloseTimeForScheduleException("invalid close time");
+
+				LocalTime classStarts = null;
+				for (int i = 0; i < scheduleRequest.getClassHoursPerDay() + 2; i++) {
+					classStarts = opensAt;
+					LocalTime classEnds = classStarts.plusMinutes(classHourLength);
 					
-						if(closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
-							throw new InvalidCloseTimeForScheduleException("invalid close time");
-						
-						LocalTime classEnds;
-						
-						for(int i=0;i<numberOfClassesPerDay+2;i++) {
-							LocalTime classStarts = opensAt;//10.15
-							classEnds = classStarts.plusMinutes(classHourLength);//11.15
-							
-							if(breakTime.isBefore(classEnds) && breakTime.isAfter(classStarts))
-								throw new InvalidBreakTimeException("break time should be at " + classEnds);
-							else {
-								if(breakTime.equals(classEnds)) {
-									opensAt = breakTime.plusMinutes(breakHourLength);
-									continue;
-								}
-							}
-							
-							if(lunchTime.isBefore(classEnds) && lunchTime.isAfter(classStarts))
-								throw new InvalidLunchTimeException("lunch time should be at " + classEnds);
-							else {
-								if(lunchTime.equals(classEnds)) {
-									opensAt = lunchTime.plusMinutes(lunchHourLength);
-									continue;
-								}
-							}
-							
-							opensAt = classEnds;
-						}
-						
-						if(!classEnds.equals(closesAt))
-							throw new InvalidClassPeriodEndTimeException("invalid class ending time dosen't match, it should be at " + closesAt );
-						Schedule schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
-
-						school.setSchedule(schedule);
-
-						schoolRepository.save(school);
-						
-						return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
-								"schedule added successfully",
-								mapToScheduleResponse(schedule));
-					}
+					if (breakTime.isBefore(classEnds) && breakTime.isAfter(classStarts))
+						throw new InvalidBreakTimeException("break time should be at " + classEnds);
 					else {
-						throw new ScheduleAlreadyPresentException("Schedule is already added");
+						if (breakTime.equals(classEnds)) {
+							opensAt = breakTime.plusMinutes(breakHourLength);
+							continue;
+						}
 					}
-				})
-				.orElseThrow(() -> new SchoolNotFoundException("school not found"));
+
+					if (lunchTime.isBefore(classEnds) && lunchTime.isAfter(classStarts))
+						throw new InvalidLunchTimeException("lunch time should be at " + classEnds);
+					else {
+						if (lunchTime.equals(classEnds)) {
+							opensAt = lunchTime.plusMinutes(lunchHourLength);
+							continue;
+						}
+					}
+
+					opensAt = classEnds;
+				}
+				
+				if (!classStarts.minusHours(1).equals(closesAt))
+					throw new InvalidClassPeriodEndTimeException("invalid class ending time dosen't match " + classStarts.minusHours(1));
+
+				
+				Schedule schedule = scheduleRepository.save(mapToSchedule(scheduleRequest));
+
+				school.setSchedule(schedule);
+
+				schoolRepository.save(school);
+
+				return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED, "schedule added successfully",
+						mapToScheduleResponse(schedule));
+			} else {
+				throw new ScheduleAlreadyPresentException("Schedule is already added");
+			}
+		}).orElseThrow(() -> new SchoolNotFoundException("school not found"));
 
 	}
 
@@ -141,14 +126,11 @@ public class ScheduleServiceImpl implements ScheduleService{
 		School school = schoolRepository.findById(schoolId)
 				.orElseThrow(() -> new SchoolNotFoundException("School not found"));
 
-		return scheduleRepository.findById(school.getSchedule().getScheduleId())
-				.map(schedule -> {
-					
-					return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND,
-							"schedule found",
-							mapToScheduleResponse(schedule));
-				})
-				.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+		return scheduleRepository.findById(school.getSchedule().getScheduleId()).map(schedule -> {
+
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.FOUND, "schedule found",
+					mapToScheduleResponse(schedule));
+		}).orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
 
 	}
 
@@ -156,19 +138,57 @@ public class ScheduleServiceImpl implements ScheduleService{
 	public ResponseEntity<ResponseStructure<ScheduleResponse>> updateSchedule(int scheduleId,
 			ScheduleRequest scheduleRequest) {
 
-		return scheduleRepository.findById(scheduleId)
-				.map(schedule -> {
-					Schedule mapToSchedule = mapToSchedule(scheduleRequest);
-					mapToSchedule.setScheduleId(scheduleId);
-					schedule = scheduleRepository.save(mapToSchedule);
+		return scheduleRepository.findById(scheduleId).map(schedule -> {
+			
 
-					return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
-							"schedule updated successfully",
-							mapToScheduleResponse(schedule));
-				})
-				.orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
+			LocalTime opensAt = scheduleRequest.getOpensAt();
+			LocalTime closesAt = scheduleRequest.getClosesAt();
+			long classHourLength = Duration.ofMinutes(scheduleRequest.getClassHoursLengthInMinutes()).toMinutes();
+			long breakHourLength = Duration.ofMinutes(scheduleRequest.getBreakLengthInMinutes()).toMinutes();
+			long lunchHourLength = Duration.ofMinutes(scheduleRequest.getLunchLengthInMinutes()).toMinutes();
+			LocalTime lunchTime = scheduleRequest.getLunchTime();
+			LocalTime breakTime = scheduleRequest.getBreakTime();
+
+			if (closesAt.isBefore(opensAt) || closesAt.isBefore(breakTime) || closesAt.isBefore(lunchTime))
+				throw new InvalidCloseTimeForScheduleException("invalid close time");
+
+			LocalTime classStarts = null;
+			for (int i = 0; i < scheduleRequest.getClassHoursPerDay() + 2; i++) {
+				classStarts = opensAt;
+				LocalTime classEnds = classStarts.plusMinutes(classHourLength);
+				
+				if (breakTime.isBefore(classEnds) && breakTime.isAfter(classStarts))
+					throw new InvalidBreakTimeException("break time should be at " + classEnds);
+				else {
+					if (breakTime.equals(classEnds)) {
+						opensAt = breakTime.plusMinutes(breakHourLength);
+						continue;
+					}
+				}
+
+				if (lunchTime.isBefore(classEnds) && lunchTime.isAfter(classStarts))
+					throw new InvalidLunchTimeException("lunch time should be at " + classEnds);
+				else {
+					if (lunchTime.equals(classEnds)) {
+						opensAt = lunchTime.plusMinutes(lunchHourLength);
+						continue;
+					}
+				}
+
+				opensAt = classEnds;
+			}
+			
+			if (!classStarts.minusHours(1).equals(closesAt))
+				throw new InvalidClassPeriodEndTimeException("invalid class ending time dosen't match " + classStarts.minusHours(1));
+
+			
+			Schedule mapToSchedule = mapToSchedule(scheduleRequest);
+			mapToSchedule.setScheduleId(scheduleId);
+			schedule = scheduleRepository.save(mapToSchedule);
+
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.OK, "schedule updated successfully",
+					mapToScheduleResponse(schedule));
+		}).orElseThrow(() -> new ScheduleNotFoundException("schedule not found"));
 	}
-
-	
 
 }

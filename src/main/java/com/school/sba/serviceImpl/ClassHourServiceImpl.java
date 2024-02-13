@@ -62,33 +62,30 @@ public class ClassHourServiceImpl implements ClassHourService {
 		List<ClassHourResponse> listOfClassHourResponses = new ArrayList<>();
 		savedList.forEach(classHour -> {
 			listOfClassHourResponses
-			.add(ClassHourResponse.builder()
-					.classBeginsAt(classHour.getClassBeginsAt().toLocalTime())
+			.add(ClassHourResponse.builder().classBeginsAt(classHour.getClassBeginsAt().toLocalTime())
 					.classEndsAt(classHour.getClassEndsAt().toLocalTime())
-					.classRoomNumber(classHour.getClassRoomNumber())
-					.classStatus(classHour.getClassStatus())
+					.classRoomNumber(classHour.getClassRoomNumber()).classStatus(classHour.getClassStatus())
 					.day(classHour.getClassBeginsAt().getDayOfWeek())
-					.date(classHour.getClassBeginsAt().toLocalDate())
-					.build());
+					.date(classHour.getClassBeginsAt().toLocalDate()).build());
 		});
 
 		return listOfClassHourResponses;
 
 	}
 
-	private boolean isRoomReserved(LocalDateTime classBeginsAt,LocalDateTime classEndsAt, int classRoomNumber) {
+	private boolean isRoomReserved(LocalDateTime classBeginsAt, LocalDateTime classEndsAt, int classRoomNumber) {
 		return classHourRepository.existsByClassBeginsAtAndClassRoomNumber(classBeginsAt, classRoomNumber);
 	}
 
 	private boolean isBreakTime(LocalDateTime currentTime, LocalTime breakStartTime, LocalTime breakEndTime) {
-		return  currentTime.toLocalTime().equals(breakStartTime) ||
-				(currentTime.toLocalTime().isAfter(breakStartTime) && currentTime.toLocalTime().isBefore(breakEndTime));
+		return currentTime.toLocalTime().equals(breakStartTime) || (currentTime.toLocalTime().isAfter(breakStartTime)
+				&& currentTime.toLocalTime().isBefore(breakEndTime));
 
 	}
 
 	private boolean isLunchTime(LocalDateTime currentTime, LocalTime lunchStartTime, LocalTime lunchEndTime) {
-		return currentTime.toLocalTime().equals(lunchStartTime) ||
-				(currentTime.toLocalTime().isAfter(lunchStartTime) && currentTime.toLocalTime().isBefore(lunchEndTime));
+		return currentTime.toLocalTime().equals(lunchStartTime) || (currentTime.toLocalTime().isAfter(lunchStartTime)
+				&& currentTime.toLocalTime().isBefore(lunchEndTime));
 
 	}
 
@@ -101,30 +98,32 @@ public class ClassHourServiceImpl implements ClassHourService {
 
 		if (schedule != null) {
 
-			if(academicProgram.getListOfClassHours().isEmpty()) {
+			if (academicProgram.getListOfClassHours().isEmpty()) {
 
 				LocalDate programBeginsAt = academicProgram.getProgramBeginsAt();
 
 				LocalDateTime currentDateTime;
-				if(programBeginsAt.isAfter(LocalDate.now()))
+				if (programBeginsAt.isAfter(LocalDate.now()))
 					currentDateTime = programBeginsAt.atTime(schedule.getOpensAt());
-				else 
+				else
 					currentDateTime = LocalDateTime.now().with(schedule.getOpensAt());
 
 				LocalDateTime lastWorkingDay;
-				if(!currentDateTime.equals(currentDateTime.with(DayOfWeek.MONDAY)))
+				if (!currentDateTime.equals(currentDateTime.with(DayOfWeek.MONDAY)))
 					lastWorkingDay = LocalDateTime.now().plusWeeks(1).with(DayOfWeek.SATURDAY);
 				else
 					lastWorkingDay = LocalDateTime.now().with(DayOfWeek.SATURDAY);
 
 				LocalTime breakTimeStart = schedule.getBreakTime();
-				LocalTime breakTimeEnd = schedule.getBreakTime().plusMinutes(schedule.getBreakLengthInMinutes().toMinutes());
+				LocalTime breakTimeEnd = schedule.getBreakTime()
+						.plusMinutes(schedule.getBreakLengthInMinutes().toMinutes());
 				LocalTime lunchTimeStart = schedule.getLunchTime();
-				LocalTime lunchTimeEnd = schedule.getLunchTime().plusMinutes(schedule.getLunchLengthInMinutes().toMinutes());
+				LocalTime lunchTimeEnd = schedule.getLunchTime()
+						.plusMinutes(schedule.getLunchLengthInMinutes().toMinutes());
 
-				while(currentDateTime.isBefore(lastWorkingDay.plusDays(1))) {
+				while (currentDateTime.isBefore(lastWorkingDay.plusDays(1))) {
 
-					if(!currentDateTime.equals(currentDateTime.with(DayOfWeek.SUNDAY))) {
+					if (!currentDateTime.equals(currentDateTime.with(DayOfWeek.SUNDAY))) {
 
 						for (int hour = 0; hour < schedule.getClassHoursPerDay() + 2; hour++) {
 
@@ -135,22 +134,24 @@ public class ClassHourServiceImpl implements ClassHourService {
 								classHour.setClassBeginsAt(currentDateTime);
 								classHour.setClassEndsAt(LocalDateTime.now().with(lunchTimeEnd));
 								classHour.setClassStatus(ClassStatus.LUNCH_TIME);
-								currentDateTime = currentDateTime.plusMinutes(schedule.getLunchLengthInMinutes().toMinutes());
+								currentDateTime = currentDateTime
+										.plusMinutes(schedule.getLunchLengthInMinutes().toMinutes());
 
-							}
-							else {
+							} else {
 								if (isBreakTime(currentDateTime, breakTimeStart, breakTimeEnd)) {
 
 									classHour.setClassBeginsAt(currentDateTime);
 									classHour.setClassEndsAt(LocalDateTime.now().with(breakTimeEnd));
 
 									classHour.setClassStatus(ClassStatus.BREAK_TIME);
-									currentDateTime = currentDateTime.plusMinutes(schedule.getBreakLengthInMinutes().toMinutes());
+									currentDateTime = currentDateTime
+											.plusMinutes(schedule.getBreakLengthInMinutes().toMinutes());
 
 								} else {
 
 									LocalDateTime beginsAt = currentDateTime;
-									LocalDateTime endsAt = beginsAt.plusMinutes(schedule.getClassHoursLengthInMinutes().toMinutes());
+									LocalDateTime endsAt = beginsAt
+											.plusMinutes(schedule.getClassHoursLengthInMinutes().toMinutes());
 
 									classHour.setClassBeginsAt(beginsAt);
 									classHour.setClassEndsAt(endsAt);
@@ -163,46 +164,49 @@ public class ClassHourServiceImpl implements ClassHourService {
 							listOfClassHour.add(classHour);
 						}
 						currentDateTime = currentDateTime.plusDays(1).with(schedule.getOpensAt());
-					}
-					else
-						currentDateTime = currentDateTime.plusDays(1).with(schedule.getOpensAt());;
+					} else
+						currentDateTime = currentDateTime.plusDays(1).with(schedule.getOpensAt());
+					;
 				}
-			} 
-			else
+			} else
 				throw new ClassHourAlreadyGeneratedException("class hour already generated");
-		}
-		else
+		} else
 			throw new ScheduleNotFoundException("schedule not found");
 
 		return listOfClassHour;
 
 	}
 
-
-
 	@Override
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> addClassHour(int programId) {
-		return academicProgramRepository.findById(programId)
-				.map(academicProgram -> {
+		return academicProgramRepository.findById(programId).map(academicProgram -> {
+			List<ClassHour> listOfClassHours = academicProgram.getListOfClassHours();
+			
+			if(listOfClassHours.isEmpty())
+				listOfClassHours = generateClassHour(academicProgram);
+			else {
+				for(ClassHour cl : listOfClassHours) {
+					if(cl.getClassBeginsAt().toLocalDate().isEqual(LocalDate.now())) {
+						listOfClassHours = generateClassHour(academicProgram);
+					}
+				}
+			}
 
-					List<ClassHour> listOfClassHours = generateClassHour(academicProgram);
+			listOfClassHours = classHourRepository.saveAll(listOfClassHours);
 
-					listOfClassHours = classHourRepository.saveAll(listOfClassHours);
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED, "class hour generated successfully",
+					mapToClassHourResponse(listOfClassHours));
 
-					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
-							"class hour generated successfully",
-							mapToClassHourResponse(listOfClassHours));
-
-				}).orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
+		}).orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 	}
 
-
 	@Override
-	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> updateClassHour(List<ClassHourRequest> listOfClassHourRequest) {
+	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> updateClassHour(
+			List<ClassHourRequest> listOfClassHourRequest) {
 
 		List<ClassHour> listOfClassHour = new ArrayList<ClassHour>();
 
-		for(ClassHourRequest classHourRequest : listOfClassHourRequest) {
+		for (ClassHourRequest classHourRequest : listOfClassHourRequest) {
 
 			ClassHour classHour = classHourRepository.findById(classHourRequest.getClassHourId())
 					.orElseThrow(() -> new ClassHourNotFoundException("class not found"));
@@ -213,115 +217,97 @@ public class ClassHourServiceImpl implements ClassHourService {
 			Subject subject = subjectRepository.findById(classHourRequest.getSubjectId())
 					.orElseThrow(() -> new SubjectNotFoundException("subject not found"));
 
+			if (teacher.getUserRole().equals(UserRole.TEACHER)) {
 
-			if(teacher.getUserRole().equals(UserRole.TEACHER)) {
+				if (teacher.getSubject().equals(subject)) {
 
-				if(teacher.getSubject().equals(subject)){
-
-					if(teacher.getListOfAcademicPrograms().contains(classHour.getAcademicPrograms())) {
+					if (teacher.getListOfAcademicPrograms().contains(classHour.getAcademicPrograms())) {
 
 						LocalDateTime classBeginsAt = classHour.getClassBeginsAt();
 						LocalDateTime classEndsAt = classHour.getClassEndsAt();
 
 						LocalDateTime currentDateTime = LocalDateTime.now();
 
-						if(isRoomReserved(classBeginsAt,classEndsAt, classHourRequest.getClassRoomNumber())) {				
+						if (isRoomReserved(classBeginsAt, classEndsAt, classHourRequest.getClassRoomNumber())) {
 							throw new RoomAlreadyAssignedException("room already reserved");
 						}
 
-						if(!classHour.getClassStatus().equals(ClassStatus.BREAK_TIME) &&
+						if (!classHour.getClassStatus().equals(ClassStatus.BREAK_TIME) &&
 
 								!classHour.getClassStatus().equals(ClassStatus.LUNCH_TIME)) {
 
-							if(currentDateTime.isAfter(classBeginsAt) && currentDateTime.isBefore(classEndsAt)) {
-								classHour.setUser(teacher); 
+							if (currentDateTime.isAfter(classBeginsAt) && currentDateTime.isBefore(classEndsAt)) {
+								classHour.setUser(teacher);
 								classHour.setClassRoomNumber(classHourRequest.getClassRoomNumber());
 								classHour.setSubject(subject);
 								classHour.setClassStatus(ClassStatus.ONGOING);
-							}
-							else if(currentDateTime.isBefore(classBeginsAt)){
+							} else if (currentDateTime.isBefore(classBeginsAt)) {
 								classHour.setUser(teacher);
 								classHour.setClassRoomNumber(classHourRequest.getClassRoomNumber());
 								classHour.setSubject(subject);
 								classHour.setClassStatus(ClassStatus.UPCOMING);
-							}
-							else {
+							} else {
 								classHour.setUser(teacher);
 								classHour.setClassRoomNumber(classHourRequest.getClassRoomNumber());
 								classHour.setSubject(subject);
 								classHour.setClassStatus(ClassStatus.COMPLETED);
 							}
-							listOfClassHour.add(classHour);	
+							listOfClassHour.add(classHour);
 							classHourRepository.save(classHour);
+						} else {
+							throw new ClassCannotAssignedException(
+									"class hour cannot be assiged to break time or lunch time");
 						}
-						else {
-							throw new ClassCannotAssignedException("class hour cannot be assiged to break time or lunch time");
-						}
-					}
-					else {
+					} else {
 						throw new AcademicProgramNotAssignedException("academic program not assigned");
 					}
-				}
-				else {
+				} else {
 					throw new SubjectNotAssignedToTeacherException("subject not assigned");
 				}
-			}
-			else {
+			} else {
 				throw new TeacherNotFoundByIdException("teacher not found");
 			}
 		}
 
-		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,
-				"class hour updated successfully",
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK, "class hour updated successfully",
 				mapToClassHourResponse(listOfClassHour));
 	}
 
 	@Override
 	public ResponseEntity<ResponseStructure<List<ClassHourResponse>>> generateClassHourForNextWeek(int programId) {
 
-		return academicProgramRepository.findById(programId)
-				.map(academicProgram -> {
-					List<ClassHour> currentWeekClassHours = new ArrayList<>();
+		return academicProgramRepository.findById(programId).map(academicProgram -> {
+			List<ClassHour> currentWeekClassHours = new ArrayList<>();
 
-					LocalDateTime endDayOfPreviousWeek = academicProgram.getListOfClassHours().getLast().getClassBeginsAt();
-					
-					if(endDayOfPreviousWeek == null)
-						throw new PreviousClassHourNotFoundException("previous class hour not found");
+			LocalDateTime endDayOfPreviousWeek = academicProgram.getListOfClassHours().getLast().getClassBeginsAt();
 
-					classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.minusDays(6))
-					.forEach(classHour -> {
-						currentWeekClassHours.add(ClassHour.builder()
-								.classBeginsAt(classHour.getClassBeginsAt().plusWeeks(1))
-								.classEndsAt(classHour.getClassEndsAt().plusWeeks(1))
-								.academicPrograms(classHour.getAcademicPrograms())
-								.classRoomNumber(classHour.getClassRoomNumber())
-								.classStatus(classHour.getClassStatus())
-								.subject(classHour.getSubject())
-								.user(classHour.getUser())
-								.build());
-					});
+			if (endDayOfPreviousWeek == null)
+				throw new PreviousClassHourNotFoundException("previous class hour not found");
 
-					classHourRepository.saveAll(currentWeekClassHours);
+			classHourRepository.findByClassBeginsAtAfter(endDayOfPreviousWeek.minusDays(6)).forEach(classHour -> {
+				currentWeekClassHours.add(ClassHour.builder().classBeginsAt(classHour.getClassBeginsAt().plusWeeks(1))
+						.classEndsAt(classHour.getClassEndsAt().plusWeeks(1))
+						.academicPrograms(classHour.getAcademicPrograms())
+						.classRoomNumber(classHour.getClassRoomNumber()).classStatus(classHour.getClassStatus())
+						.subject(classHour.getSubject()).user(classHour.getUser()).build());
+			});
 
-					return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
-							"class hour generated successfully",
-							mapToClassHourResponse(currentWeekClassHours));
+			classHourRepository.saveAll(currentWeekClassHours);
 
-				})
-				.orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
+			return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED, "class hour generated successfully",
+					mapToClassHourResponse(currentWeekClassHours));
+
+		}).orElseThrow(() -> new AcademicProgramNotFoundException("academic program not found"));
 	}
 
 	public void classHourGen(int programId, LocalDateTime now) {
 
-		if(!classHourRepository.existsByClassBeginsAt(now
-				.with(academicProgramRepository
-						.findById(programId).get()
-						.getSchool()
-						.getSchedule().getOpensAt()))) {
+		if (!classHourRepository.existsByClassBeginsAt(
+				now.with(academicProgramRepository.findById(programId).get().getSchool().getSchedule().getOpensAt()))) {
 			System.out.println("hello 2");
 			generateClassHourForNextWeek(programId);
 			System.out.println("hello 3");
-			
+
 		}
 	}
 
